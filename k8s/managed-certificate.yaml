@@ -1,0 +1,8 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: spice-runner-cert
+spec:
+  domains:
+    - your-domain.com  # REPLACE with your actual domain
+

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spice-runner-service
+spec:
+  type: ClusterIP  # Changed from LoadBalancer - Ingress will handle external access
+  selector:
+    app: spice-runner
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+

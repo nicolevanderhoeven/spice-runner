@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spice-runner
+  labels:
+    app: spice-runner
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spice-runner
+  template:
+    metadata:
+      labels:
+        app: spice-runner
+    spec:
+      containers:
+      - name: spice-runner
+        image: gcr.io/dev-advocacy-380120/spice-runner:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+

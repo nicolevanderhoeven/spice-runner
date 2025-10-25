@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spice-runner-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "spice-runner-ip"
+    networking.gke.io/managed-certificates: "spice-runner-cert"
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+  - host: your-domain.com  # REPLACE with your actual domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: spice-runner-service
+            port:
+              number: 80
+
