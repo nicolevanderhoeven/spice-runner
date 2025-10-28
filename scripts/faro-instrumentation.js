@@ -58,6 +58,17 @@
       return originalPlayIntro.apply(this, arguments);
     };
 
+    // Helper function to get the actual displayed score
+    function getDisplayedScore(runner) {
+      // The game displays the score via distanceMeter.getActualDistance()
+      // which divides distanceRan by the coefficient
+      if (runner.distanceMeter && runner.distanceMeter.getActualDistance) {
+        return Math.floor(runner.distanceMeter.getActualDistance(runner.distanceRan));
+      }
+      // Fallback: manually calculate (distanceRan is typically 10x the displayed score)
+      return runner.distanceRan ? Math.floor(runner.distanceRan / 10) : 0;
+    }
+
     // Track player jumps
     const originalOnKeyDown = window.Runner.prototype.onKeyDown;
     window.Runner.prototype.onKeyDown = function(e) {
@@ -66,7 +77,7 @@
       if (e.keyCode === 38 || e.keyCode === 32) { // Up arrow or Space
         faro.api.pushEvent('player_jump', {
           sessionId: currentSessionId,
-          score: this.distanceRan ? Math.floor(this.distanceRan) : 0,
+          score: getDisplayedScore(this),
           timestamp: Date.now()
         });
       }
@@ -77,7 +88,7 @@
     // Track collisions and game over
     const originalGameOver = window.Runner.prototype.gameOver;
     window.Runner.prototype.gameOver = function() {
-      const finalScore = this.distanceRan ? Math.floor(this.distanceRan) : 0;
+      const finalScore = getDisplayedScore(this);
       const sessionDuration = Date.now() - sessionStartTime;
 
       faro.api.pushEvent('game_collision', {
@@ -108,6 +119,7 @@
     // Track high scores
     const originalSetHighScore = window.Runner.prototype.setHighScore;
     window.Runner.prototype.setHighScore = function(distance) {
+      // setHighScore receives the already-calculated display score
       const score = Math.floor(distance);
       
       faro.api.pushEvent('high_score', {
