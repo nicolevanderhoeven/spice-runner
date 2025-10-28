@@ -47,7 +47,16 @@
         <audio id="offline-sound-hit" src="assets/offline-sound-hit.mp3"></audio>
         <audio id="offline-sound-reached" src="assets/offline-sound-reached.mp3"></audio>
         </template> -->
+        <!-- Grafana Faro SDK for Real User Monitoring -->
+        <script src="https://unpkg.com/@grafana/faro-web-sdk@^1.3.0/dist/bundle/faro-web-sdk.iife.js"></script>
+        
+        <!-- Initialize Faro -->
+        <script src="scripts/faro-init.js"></script>
+        
         <!-- Game scripts -->
         <script src="scripts/runner.js"></script>
+        
+        <!-- Game instrumentation with Faro -->
+        <script src="scripts/faro-instrumentation.js"></script>
     </body>
 </html>

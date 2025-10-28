@@ -151,9 +151,36 @@ data:
       }
       
       output {
-        logs   = [loki.write.default.receiver]
+        logs   = [loki.process.faro_logs.receiver]
         traces = [otelcol.processor.batch.faro_traces.input]
       }
+    }
+    
+    // Process Faro logs to add proper labels
+    loki.process "faro_logs" {
+      stage.json {
+        expressions = {
+          kind = "kind",
+          name = "name",
+        }
+      }
+      
+      stage.labels {
+        values = {
+          kind = "kind",
+        }
+      }
+      
+      stage.static_labels {
+        values = {
+          job = "faro",
+          service = "spice-runner-frontend",
+          namespace = env("KUBERNETES_NAMESPACE"),
+          pod = env("POD_NAME"),
+        }
+      }
+      
+      forward_to = [loki.write.default.receiver]
     }
     
     // Batch processor for Faro traces
