@@ -21,6 +21,7 @@ spec:
       # Main application container (Nginx + Game)
       - name: spice-runner
         image: gcr.io/dev-advocacy-380120/spice-runner:latest
+        imagePullPolicy: Always
         ports:
         - name: http
           containerPort: 80
