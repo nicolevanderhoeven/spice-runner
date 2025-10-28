@@ -1,0 +1,297 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-observability-dashboard
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  nginx-dashboard.json: |
+    {
+      "title": "Spice Runner - Nginx Observability",
+      "uid": "spice-nginx-obs",
+      "tags": ["nginx", "alloy", "logs"],
+      "timezone": "browser",
+      "refresh": "10s",
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Recent Access Logs",
+          "type": "logs",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "targets": [
+            {
+              "expr": "{job=\"nginx\"} | json",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": false,
+            "wrapLogMessage": false,
+            "prettifyLogMessage": true,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
+        },
+        {
+          "id": 2,
+          "title": "HTTP Status Distribution",
+          "type": "piechart",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 10
+          },
+          "targets": [
+            {
+              "expr": "sum by (status) (count_over_time({job=\"nginx\"} | json [5m]))",
+              "refId": "A",
+              "legendFormat": "{{status}}"
+            }
+          ],
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "values": ["value"]
+            },
+            "pieType": "pie",
+            "tooltip": {
+              "mode": "single"
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Request Rate (per minute)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 16,
+            "x": 8,
+            "y": 10
+          },
+          "targets": [
+            {
+              "expr": "rate({job=\"nginx\"} | json [1m])",
+              "refId": "A",
+              "legendFormat": "Requests/min"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 20,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "unit": "reqpm"
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "HTTP Errors (4xx, 5xx)",
+          "type": "logs",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "targets": [
+            {
+              "expr": "{job=\"nginx\"} | json | status >= 400",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "wrapLogMessage": false
+          }
+        },
+        {
+          "id": 5,
+          "title": "Alloy Status",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 18
+          },
+          "targets": [
+            {
+              "expr": "alloy_component_controller_running_components",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "none",
+            "colorMode": "value",
+            "textMode": "value_and_name",
+            "orientation": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "value": null,
+                    "color": "green"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "Alloy Config Status",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 18
+          },
+          "targets": [
+            {
+              "expr": "alloy_config_last_load_successful",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "none",
+            "colorMode": "background",
+            "textMode": "name",
+            "orientation": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "1": {
+                      "text": "✓ Loaded",
+                      "color": "green"
+                    },
+                    "0": {
+                      "text": "✗ Failed",
+                      "color": "red"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "Top User Agents",
+          "type": "bargauge",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 22
+          },
+          "targets": [
+            {
+              "expr": "topk(5, sum by (http_user_agent) (count_over_time({job=\"nginx\"} | json [15m])))",
+              "refId": "A",
+              "legendFormat": "{{http_user_agent}}"
+            }
+          ],
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient"
+          }
+        },
+        {
+          "id": 8,
+          "title": "Request Paths",
+          "type": "table",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 22
+          },
+          "targets": [
+            {
+              "expr": "topk(10, sum by (request) (count_over_time({job=\"nginx\"} | json [15m])))",
+              "refId": "A"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "renameByName": {
+                  "request": "Request Path",
+                  "Value": "Count"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+

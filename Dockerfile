@@ -1,10 +1,13 @@
 # Use official Nginx image as base
 FROM nginx:alpine
 
-# Copy all game files to Nginx's default html directory
+# Copy all game files to Nginx's html directory
 COPY index.html /usr/share/nginx/html/
 COPY scripts/ /usr/share/nginx/html/scripts/
 COPY img/ /usr/share/nginx/html/img/
+
+# Copy custom Nginx configuration for path-based routing
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80

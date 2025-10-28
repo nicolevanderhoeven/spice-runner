@@ -8,11 +8,25 @@ metadata:
     kubernetes.io/ingress.class: "gce"
 spec:
   rules:
-  - host: your-domain.com  # REPLACE with your actual domain
+  - host: nvdh.dev
     http:
       paths:
-      - path: /
+      - path: /spice
         pathType: Prefix
+        backend:
+          service:
+            name: spice-runner-service
+            port:
+              number: 80
+      - path: /spice/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: spice-runner-service
+            port:
+              number: 80
+      - path: /alloy/collect
+        pathType: Exact
         backend:
           service:
             name: spice-runner-service

@@ -4,5 +4,5 @@ metadata:
   name: spice-runner-cert
 spec:
   domains:
-    - your-domain.com  # REPLACE with your actual domain
+    - nvdh.dev
 
