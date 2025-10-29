@@ -1677,20 +1677,20 @@
     };
     Ornithopter.prototype = {
         /**
-         * Initialise the cloud. Sets the Cloud height.
+         * Initialise the ornithopter. Sets the ornithopter height.
          */
         init: function() {
-            this.yPos = getRandomNum(Cloud.config.MAX_SKY_LEVEL,
-                Cloud.config.MIN_SKY_LEVEL);
+            this.yPos = getRandomNum(Ornithopter.config.MAX_SKY_LEVEL,
+                Ornithopter.config.MIN_SKY_LEVEL);
             this.draw();
         },
         /**
-         * Draw the cloud.
+         * Draw the ornithopter.
          */
         draw: function() {
             this.canvasCtx.save();
-            var sourceWidth = Cloud.config.WIDTH;
-            var sourceHeight = Cloud.config.HEIGHT;
+            var sourceWidth = Ornithopter.config.WIDTH;
+            var sourceHeight = Ornithopter.config.HEIGHT;
 
             if (IS_HIDPI) {
                 sourceWidth = sourceWidth * 2;
@@ -1699,11 +1699,11 @@
             this.canvasCtx.drawImage(this.image, 0, 0,
                 sourceWidth, sourceHeight,
                 this.xPos, this.yPos,
-                Cloud.config.WIDTH, Cloud.config.HEIGHT);
+                Ornithopter.config.WIDTH, Ornithopter.config.HEIGHT);
             this.canvasCtx.restore();
         },
         /**
-         * Update the cloud position.
+         * Update the ornithopter position.
          * @param {number} speed
          */
         update: function(speed) {
@@ -1718,11 +1718,11 @@
             }
         },
         /**
-         * Check if the cloud is visible on the stage.
+         * Check if the ornithopter is visible on the stage.
          * @return {boolean}
          */
         isVisible: function() {
-            return this.xPos + Cloud.config.WIDTH > 0;
+            return this.xPos + Ornithopter.config.WIDTH > 0;
         }
     };
     //******************************************************************************
