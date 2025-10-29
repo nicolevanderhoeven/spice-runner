@@ -454,7 +454,7 @@
 
                 // Check for collisions.
                 var collision = hasObstacles &&
-                    checkForCollision(this.horizon.obstacles[0], this.fremen, this.canvasCtx);
+                    checkForCollision(this.horizon.obstacles[0], this.fremen);
                 if (!collision) {
                     this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
                     if (this.currentSpeed < this.config.MAX_SPEED) {
@@ -1060,24 +1060,6 @@
             // Sprite - always start from beginning of sprite sheet
             // For Harkonnen: size 1 = 1 soldier, size 2 = 2 soldiers, size 3 = 3 soldiers
             var sourceX = 0;
-            
-            // Debug logging for Harkonnen obstacles
-            if (this.typeConfig.type === 'HARKONNEN') {
-                console.log('Drawing HARKONNEN:', {
-                    type: this.typeConfig.type,
-                    size: this.size,
-                    sourceX: sourceX,
-                    sourceY: 0,
-                    sourceWidth: sourceWidth * this.size,
-                    sourceHeight: sourceHeight,
-                    targetX: this.xPos,
-                    targetY: this.yPos,
-                    targetWidth: this.typeConfig.width * this.size,
-                    targetHeight: this.typeConfig.height,
-                    imageNaturalWidth: this.image.naturalWidth,
-                    imageNaturalHeight: this.image.naturalHeight
-                });
-            }
             
             this.canvasCtx.drawImage(this.image,
                 sourceX, 0,
