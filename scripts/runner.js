@@ -4,7 +4,7 @@
 (function() {
     'use strict';
     /**
-     * T-Rex runner.
+     * Fremen runner.
      * @param {string} outerContainerId Outer containing element id.
      * @param {object} opt_config
      * @constructor
@@ -23,7 +23,7 @@
         this.dimensions = Runner.defaultDimensions;
         this.canvas = null;
         this.canvasCtx = null;
-        this.tRex = null;
+        this.fremen = null;
         this.distanceMeter = null;
         this.distanceRan = 0;
 
@@ -137,8 +137,8 @@
             name: 'TEXT_SPRITE',
             id: '1x-text'
         }, {
-            name: 'TREX',
-            id: '1x-trex'
+            name: 'FREMEN',
+            id: '1x-fremen'
         }],
         HDPI: [{
             name: 'CACTUS_LARGE',
@@ -159,8 +159,8 @@
             name: 'TEXT_SPRITE',
             id: '2x-text'
         }, {
-            name: 'TREX',
-            id: '2x-trex'
+            name: 'FREMEN',
+            id: '2x-fremen'
         }]
     };
 
@@ -222,10 +222,10 @@
                     case 'GRAVITY':
                     case 'MIN_JUMP_HEIGHT':
                     case 'SPEED_DROP_COEFFICIENT':
-                        this.tRex.config[setting] = value;
+                        this.fremen.config[setting] = value;
                         break;
                     case 'INITIAL_JUMP_VELOCITY':
-                        this.tRex.setJumpVelocity(value);
+                        this.fremen.setJumpVelocity(value);
                         break;
                     case 'SPEED':
                         this.setSpeed(value);
@@ -307,8 +307,8 @@
             // Distance meter
             this.distanceMeter = new DistanceMeter(this.canvas,
                 this.images.TEXT_SPRITE, this.dimensions.WIDTH);
-            // Draw t-rex
-            this.tRex = new Trex(this.canvas, this.images.TREX);
+            // Draw fremen
+            this.fremen = new Fremen(this.canvas, this.images.FREMEN);
 
             this.outerContainerEl.appendChild(this.containerEl);
             if (IS_MOBILE) {
@@ -355,7 +355,7 @@
                 this.distanceMeter.calcXPos(this.dimensions.WIDTH);
                 this.clearCanvas();
                 this.horizon.update(0, 0, true);
-                this.tRex.update(0);
+                this.fremen.update(0);
 
                 // Outer container and distance meter.
                 if (this.activated || this.crashed) {
@@ -364,7 +364,7 @@
                     this.distanceMeter.update(0, Math.ceil(this.distanceRan));
                     this.stop();
                 } else {
-                    this.tRex.draw(0, 0);
+                    this.fremen.draw(0, 0);
                 }
                 // Game over panel.
                 if (this.crashed && this.gameOverPanel) {
@@ -380,10 +380,10 @@
         playIntro: function() {
             if (!this.started && !this.crashed) {
                 this.playingIntro = true;
-                this.tRex.playingIntro = true;
+                this.fremen.playingIntro = true;
                 // CSS animation definition.
                 var keyframes = '@-webkit-keyframes intro { ' +
-                    'from { width:' + Trex.config.WIDTH + 'px }' +
+                    'from { width:' + Fremen.config.WIDTH + 'px }' +
                     'to { width: ' + this.dimensions.WIDTH + 'px }' +
                     '}';
                 document.styleSheets[0].insertRule(keyframes, 0);
@@ -408,7 +408,7 @@
         startGame: function() {
             this.runningTime = 0;
             this.playingIntro = false;
-            this.tRex.playingIntro = false;
+            this.fremen.playingIntro = false;
             this.containerEl.style.webkitAnimation = '';
             this.playCount++;
             // Handle tabbing off the page. Pause the current game.
@@ -435,13 +435,13 @@
             if (this.activated) {
                 this.clearCanvas();
 
-                if (this.tRex.jumping) {
-                    this.tRex.updateJump(deltaTime, this.config);
+                if (this.fremen.jumping) {
+                    this.fremen.updateJump(deltaTime, this.config);
                 }
                 this.runningTime += deltaTime;
                 var hasObstacles = this.runningTime > this.config.CLEAR_TIME;
                 // First jump triggers the intro.
-                if (this.tRex.jumpCount == 1 && !this.playingIntro) {
+                if (this.fremen.jumpCount == 1 && !this.playingIntro) {
                     this.playIntro();
                 }
                 // The horizon doesn't move until the intro is over.
@@ -454,7 +454,7 @@
 
                 // Check for collisions.
                 var collision = hasObstacles &&
-                    checkForCollision(this.horizon.obstacles[0], this.tRex);
+                    checkForCollision(this.horizon.obstacles[0], this.fremen);
                 if (!collision) {
                     this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
                     if (this.currentSpeed < this.config.MAX_SPEED) {
@@ -475,7 +475,7 @@
                 }
             }
             if (!this.crashed) {
-                this.tRex.update(deltaTime);
+                this.fremen.update(deltaTime);
                 this.raq();
             }
         },
@@ -544,9 +544,9 @@
                     this.loadSounds();
                     this.activated = true;
                 }
-                if (!this.tRex.jumping) {
+                if (!this.fremen.jumping) {
                     this.playSound(this.soundFx.BUTTON_PRESS);
-                    this.tRex.startJump();
+                    this.fremen.startJump();
                 }
             }
             if (this.crashed && e.type == Runner.events.TOUCHSTART &&
@@ -554,9 +554,9 @@
                 this.restart();
             }
             // Speed drop, activated only when jump key is not pressed.
-            if (Runner.keycodes.DUCK[e.keyCode] && this.tRex.jumping) {
+            if (Runner.keycodes.DUCK[e.keyCode] && this.fremen.jumping) {
                 e.preventDefault();
-                this.tRex.setSpeedDrop();
+                this.fremen.setSpeedDrop();
             }
         },
 
@@ -570,9 +570,9 @@
                 e.type == Runner.events.TOUCHEND ||
                 e.type == Runner.events.MOUSEDOWN;
             if (this.isRunning() && isjumpKey) {
-                this.tRex.endJump();
+                this.fremen.endJump();
             } else if (Runner.keycodes.DUCK[keyCode]) {
-                this.tRex.speedDrop = false;
+                this.fremen.speedDrop = false;
             } else if (this.crashed) {
                 // Check that enough time has elapsed before allowing jump key to restart.
                 var deltaTime = performance.now() - this.time;
@@ -613,7 +613,7 @@
             this.crashed = true;
             this.distanceMeter.acheivement = false;
 
-            this.tRex.update(100, Trex.status.CRASHED);
+            this.fremen.update(100, Fremen.status.CRASHED);
             // Game over panel.
             if (!this.gameOverPanel) {
                 this.gameOverPanel = new GameOverPanel(this.canvas,
@@ -641,7 +641,7 @@
             if (!this.crashed) {
                 this.activated = true;
                 this.paused = false;
-                this.tRex.update(0, Trex.status.RUNNING);
+                this.fremen.update(0, Fremen.status.RUNNING);
                 this.time = performance.now();
                 this.update();
             }
@@ -659,7 +659,7 @@
                 this.clearCanvas();
                 this.distanceMeter.reset(this.highestScore);
                 this.horizon.reset();
-                this.tRex.reset();
+                this.fremen.reset();
                 this.playSound(this.soundFx.BUTTON_PRESS);
 
                 this.update();
@@ -863,21 +863,21 @@
     /**
      * Check for a collision.
      * @param {!Obstacle} obstacle
-     * @param {!Trex} tRex T-rex object.
+     * @param {!Fremen} fremen Fremen object.
      * @param {HTMLCanvasContext} opt_canvasCtx Optional canvas context for drawing
      *    collision boxes.
      * @return {Array.<CollisionBox>}
      */
-    function checkForCollision(obstacle, tRex, opt_canvasCtx) {
+    function checkForCollision(obstacle, fremen, opt_canvasCtx) {
         var obstacleBoxXPos = Runner.defaultDimensions.WIDTH + obstacle.xPos;
 
         // Adjustments are made to the bounding box as there is a 1 pixel white
-        // border around the t-rex and obstacles.
-        var tRexBox = new CollisionBox(
-            tRex.xPos + 1,
-            tRex.yPos + 1,
-            tRex.config.WIDTH - 2,
-            tRex.config.HEIGHT - 2);
+        // border around the fremen and obstacles.
+        var fremenBox = new CollisionBox(
+            fremen.xPos + 1,
+            fremen.yPos + 1,
+            fremen.config.WIDTH - 2,
+            fremen.config.HEIGHT - 2);
         var obstacleBox = new CollisionBox(
             obstacle.xPos + 1,
             obstacle.yPos + 1,
@@ -885,28 +885,28 @@
             obstacle.typeConfig.height - 2);
         // Debug outer box
         if (opt_canvasCtx) {
-            drawCollisionBoxes(opt_canvasCtx, tRexBox, obstacleBox);
+            drawCollisionBoxes(opt_canvasCtx, fremenBox, obstacleBox);
         }
         // Simple outer bounds check.
-        if (boxCompare(tRexBox, obstacleBox)) {
+        if (boxCompare(fremenBox, obstacleBox)) {
             var collisionBoxes = obstacle.collisionBoxes;
-            var tRexCollisionBoxes = Trex.collisionBoxes;
+            var fremenCollisionBoxes = Fremen.collisionBoxes;
 
             // Detailed axis aligned box check.
-            for (var t = 0; t < tRexCollisionBoxes.length; t++) {
+            for (var t = 0; t < fremenCollisionBoxes.length; t++) {
                 for (var i = 0; i < collisionBoxes.length; i++) {
                     // Adjust the box to actual positions.
-                    var adjTrexBox =
-                        createAdjustedCollisionBox(tRexCollisionBoxes[t], tRexBox);
+                    var adjFremenBox =
+                        createAdjustedCollisionBox(fremenCollisionBoxes[t], fremenBox);
                     var adjObstacleBox =
                         createAdjustedCollisionBox(collisionBoxes[i], obstacleBox);
-                    var crashed = boxCompare(adjTrexBox, adjObstacleBox);
+                    var crashed = boxCompare(adjFremenBox, adjObstacleBox);
                     // Draw boxes for debug.
                     if (opt_canvasCtx) {
-                        drawCollisionBoxes(opt_canvasCtx, adjTrexBox, adjObstacleBox);
+                        drawCollisionBoxes(opt_canvasCtx, adjFremenBox, adjObstacleBox);
                     }
                     if (crashed) {
-                        return [adjTrexBox, adjObstacleBox];
+                        return [adjFremenBox, adjObstacleBox];
                     }
                 }
             }
@@ -930,11 +930,11 @@
     /**
      * Draw the collision boxes for debug.
      */
-    function drawCollisionBoxes(canvasCtx, tRexBox, obstacleBox) {
+    function drawCollisionBoxes(canvasCtx, fremenBox, obstacleBox) {
         canvasCtx.save();
         canvasCtx.strokeStyle = '#f00';
-        canvasCtx.strokeRect(tRexBox.x, tRexBox.y,
-            tRexBox.width, tRexBox.height);
+        canvasCtx.strokeRect(fremenBox.x, fremenBox.y,
+            fremenBox.width, fremenBox.height);
         canvasCtx.strokeStyle = '#0f0';
         canvasCtx.strokeRect(obstacleBox.x, obstacleBox.y,
             obstacleBox.width, obstacleBox.height);
@@ -943,21 +943,21 @@
 
     /**
      * Compare two collision boxes for a collision.
-     * @param {CollisionBox} tRexBox
+     * @param {CollisionBox} fremenBox
      * @param {CollisionBox} obstacleBox
      * @return {boolean} Whether the boxes intersected.
      */
-    function boxCompare(tRexBox, obstacleBox) {
+    function boxCompare(fremenBox, obstacleBox) {
         var crashed = false;
-        var tRexBoxX = tRexBox.x;
-        var tRexBoxY = tRexBox.y;
+        var fremenBoxX = fremenBox.x;
+        var fremenBoxY = fremenBox.y;
         var obstacleBoxX = obstacleBox.x;
         var obstacleBoxY = obstacleBox.y;
         // Axis-Aligned Bounding Box method.
-        if (tRexBox.x < obstacleBoxX + obstacleBox.width &&
-            tRexBox.x + tRexBox.width > obstacleBoxX &&
-            tRexBox.y < obstacleBox.y + obstacleBox.height &&
-            tRexBox.height + tRexBox.y > obstacleBox.y) {
+        if (fremenBox.x < obstacleBoxX + obstacleBox.width &&
+            fremenBox.x + fremenBox.width > obstacleBoxX &&
+            fremenBox.y < obstacleBox.y + obstacleBox.height &&
+            fremenBox.height + fremenBox.y > obstacleBox.y) {
             crashed = true;
         }
 
@@ -1148,12 +1148,12 @@
     }];
     //******************************************************************************
     /**
-     * T-rex game character.
+     * Fremen game character.
      * @param {HTMLCanvas} canvas
      * @param {HTMLImage} image Character image.
      * @constructor
      */
-    function Trex(canvas, image) {
+    function Fremen(canvas, image) {
         this.canvas = canvas;
         this.canvasCtx = canvas.getContext('2d');
         this.image = image;
@@ -1167,9 +1167,9 @@
         this.animStartTime = 0;
         this.timer = 0;
         this.msPerFrame = 1000 / FPS;
-        this.config = Trex.config;
+        this.config = Fremen.config;
         // Current status.
-        this.status = Trex.status.WAITING;
+        this.status = Fremen.status.WAITING;
         this.jumping = false;
         this.jumpVelocity = 0;
         this.reachedMinHeight = false;
@@ -1180,10 +1180,10 @@
         this.init();
     };
     /**
-     * T-rex player config.
+     * Fremen player config.
      * @enum {number}
      */
-    Trex.config = {
+    Fremen.config = {
         DROP_VELOCITY: -5,
         GRAVITY: 0.6,
         HEIGHT: 47,
@@ -1201,7 +1201,7 @@
      * Used in collision detection.
      * @type {Array.<CollisionBox>}
      */
-    Trex.collisionBoxes = [
+    Fremen.collisionBoxes = [
         new CollisionBox(1, -1, 30, 26),
         new CollisionBox(32, 0, 8, 16),
         new CollisionBox(10, 35, 14, 8),
@@ -1213,7 +1213,7 @@
      * Animation states.
      * @enum {string}
      */
-    Trex.status = {
+    Fremen.status = {
         CRASHED: 'CRASHED',
         JUMPING: 'JUMPING',
         RUNNING: 'RUNNING',
@@ -1223,13 +1223,13 @@
      * Blinking coefficient.
      * @const
      */
-    Trex.BLINK_TIMING = 7000;
+    Fremen.BLINK_TIMING = 7000;
 
     /**
      * Animation config for different states.
      * @enum {object}
      */
-    Trex.animFrames = {
+    Fremen.animFrames = {
         WAITING: {
             frames: [44, 0],
             msPerFrame: 1000 / 3
@@ -1247,10 +1247,10 @@
             msPerFrame: 1000 / 60
         }
     };
-    Trex.prototype = {
+    Fremen.prototype = {
         /**
-         * T-rex player initaliser.
-         * Sets the t-rex to blink at random intervals.
+         * Fremen player initaliser.
+         * Sets the fremen to blink at random intervals.
          */
         init: function() {
             this.blinkDelay = this.setBlinkDelay();
@@ -1260,7 +1260,7 @@
             this.minJumpHeight = this.groundYPos - this.config.MIN_JUMP_HEIGHT;
 
             this.draw(0, 0);
-            this.update(0, Trex.status.WAITING);
+            this.update(0, Fremen.status.WAITING);
         },
         /**
          * Setter for the jump velocity.
@@ -1273,7 +1273,7 @@
         /**
          * Set the animation status.
          * @param {!number} deltaTime
-         * @param {Trex.status} status Optional status to switch to.
+         * @param {Fremen.status} status Optional status to switch to.
          */
         update: function(deltaTime, opt_status) {
             this.timer += deltaTime;
@@ -1281,20 +1281,20 @@
             if (opt_status) {
                 this.status = opt_status;
                 this.currentFrame = 0;
-                this.msPerFrame = Trex.animFrames[opt_status].msPerFrame;
-                this.currentAnimFrames = Trex.animFrames[opt_status].frames;
+                this.msPerFrame = Fremen.animFrames[opt_status].msPerFrame;
+                this.currentAnimFrames = Fremen.animFrames[opt_status].frames;
 
-                if (opt_status == Trex.status.WAITING) {
+                if (opt_status == Fremen.status.WAITING) {
                     this.animStartTime = performance.now();
                     this.setBlinkDelay();
                 }
             }
-            // Game intro animation, T-rex moves in from the left.
+            // Game intro animation, Fremen moves in from the left.
             if (this.playingIntro && this.xPos < this.config.START_X_POS) {
                 this.xPos += Math.round((this.config.START_X_POS /
                     this.config.INTRO_DURATION) * deltaTime);
             }
-            if (this.status == Trex.status.WAITING) {
+            if (this.status == Fremen.status.WAITING) {
                 this.blink(performance.now());
             } else {
                 this.draw(this.currentAnimFrames[this.currentFrame], 0);
@@ -1308,7 +1308,7 @@
         },
 
         /**
-         * Draw the t-rex to a particular position.
+         * Draw the fremen to a particular position.
          * @param {number} x
          * @param {number} y
          */
@@ -1332,11 +1332,11 @@
          * Sets a random time for the blink to happen.
          */
         setBlinkDelay: function() {
-            this.blinkDelay = Math.ceil(Math.random() * Trex.BLINK_TIMING);
+            this.blinkDelay = Math.ceil(Math.random() * Fremen.BLINK_TIMING);
         },
 
         /**
-         * Make t-rex blink at random intervals.
+         * Make fremen blink at random intervals.
          * @param {number} time Current time in milliseconds.
          */
         blink: function(time) {
@@ -1355,7 +1355,7 @@
          */
         startJump: function() {
             if (!this.jumping) {
-                this.update(0, Trex.status.JUMPING);
+                this.update(0, Fremen.status.JUMPING);
                 this.jumpVelocity = this.config.INIITAL_JUMP_VELOCITY;
                 this.jumping = true;
                 this.reachedMinHeight = false;
@@ -1377,9 +1377,9 @@
          * @param {number} deltaTime
          */
         updateJump: function(deltaTime) {
-            var msPerFrame = Trex.animFrames[this.status].msPerFrame;
+            var msPerFrame = Fremen.animFrames[this.status].msPerFrame;
             var framesElapsed = deltaTime / msPerFrame;
-            // Speed drop makes Trex fall faster.
+            // Speed drop makes Fremen fall faster.
             if (this.speedDrop) {
                 this.yPos += Math.round(this.jumpVelocity *
                     this.config.SPEED_DROP_COEFFICIENT * framesElapsed);
@@ -1412,13 +1412,13 @@
             this.jumpVelocity = 1;
         },
         /**
-         * Reset the t-rex to running at start of game.
+         * Reset the fremen to running at start of game.
          */
         reset: function() {
             this.yPos = this.groundYPos;
             this.jumpVelocity = 0;
             this.jumping = false;
-            this.update(0, Trex.status.RUNNING);
+            this.update(0, Fremen.status.RUNNING);
             this.midair = false;
             this.speedDrop = false;
             this.jumpCount = 0;
