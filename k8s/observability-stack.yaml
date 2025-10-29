@@ -5,6 +5,19 @@ kind: Namespace
 metadata:
   name: observability
 ---
+# Prometheus PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-storage
+  namespace: observability
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
 # Prometheus ServiceAccount
 apiVersion: v1
 kind: ServiceAccount
@@ -69,6 +82,8 @@ spec:
         app: prometheus
     spec:
       serviceAccountName: prometheus
+      securityContext:
+        fsGroup: 65534
       containers:
       - name: prometheus
         image: prom/prometheus:latest
@@ -99,7 +114,8 @@ spec:
         configMap:
           name: prometheus-config
       - name: storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: prometheus-storage
 ---
 # Prometheus Service
 apiVersion: v1
@@ -338,6 +354,19 @@ subjects:
   name: kube-state-metrics
   namespace: kube-system
 ---
+# Loki PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loki-storage
+  namespace: observability
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
 # Loki Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -356,6 +385,8 @@ spec:
       labels:
         app: loki
     spec:
+      securityContext:
+        fsGroup: 10001
       containers:
       - name: loki
         image: grafana/loki:latest
@@ -381,7 +412,8 @@ spec:
         configMap:
           name: loki-config
       - name: storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: loki-storage
 ---
 # Loki Service
 apiVersion: v1
@@ -449,6 +481,19 @@ data:
       allow_structured_metadata: true
       volume_enabled: true
 ---
+# Tempo PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tempo-storage
+  namespace: observability
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
 # Tempo Deployment (Optional - for traces)
 apiVersion: apps/v1
 kind: Deployment
@@ -467,6 +512,8 @@ spec:
       labels:
         app: tempo
     spec:
+      securityContext:
+        fsGroup: 10001
       containers:
       - name: tempo
         image: grafana/tempo:latest
@@ -496,7 +543,8 @@ spec:
         configMap:
           name: tempo-config
       - name: storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: tempo-storage
 ---
 # Tempo Service
 apiVersion: v1
