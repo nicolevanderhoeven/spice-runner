@@ -1057,8 +1057,9 @@
                 sourceHeight = sourceHeight * 2;
             }
 
-            // Sprite
-            var sourceX = (sourceWidth * this.size) * (0.5 * (this.size - 1));
+            // Sprite - always start from beginning of sprite sheet
+            // For Harkonnen: size 1 = 1 soldier, size 2 = 2 soldiers, size 3 = 3 soldiers
+            var sourceX = 0;
             
             // Debug logging for Harkonnen obstacles
             if (this.typeConfig.type === 'HARKONNEN') {
