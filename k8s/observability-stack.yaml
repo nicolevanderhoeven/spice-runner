@@ -351,7 +351,7 @@ spec:
         - name: GF_AUTH_DISABLE_LOGIN_FORM
           value: "true"
         - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
-          value: "/etc/grafana/provisioning/dashboards/spice-runner-dashboard.json"
+          value: "/var/lib/grafana/dashboards/spice-runner-dashboard.json"
         volumeMounts:
         - name: datasources
           mountPath: /etc/grafana/provisioning/datasources
@@ -410,6 +410,7 @@ data:
     datasources:
       - name: Prometheus
         type: prometheus
+        uid: prometheus
         access: proxy
         url: http://prometheus.observability.svc.cluster.local:9090
         isDefault: true
@@ -419,6 +420,7 @@ data:
 
       - name: Loki
         type: loki
+        uid: loki
         access: proxy
         url: http://loki.observability.svc.cluster.local:3100
         editable: true
@@ -426,6 +428,7 @@ data:
           maxLines: 1000
 
       - name: Tempo
+        uid: tempo
         type: tempo
         access: proxy
         url: http://tempo.observability.svc.cluster.local:3200
@@ -455,4 +458,306 @@ data:
         allowUiUpdates: true
         options:
           path: /var/lib/grafana/dashboards
+---
+# Grafana Dashboards ConfigMap with actual dashboard JSON
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: observability
+data:
+  spice-runner-dashboard.json: |
+    {
+      "title": "Spice Runner",
+      "uid": "spice-runner-observability",
+      "tags": ["spice-runner", "alloy", "nginx"],
+      "timezone": "browser",
+      "refresh": "10s",
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Nginx Access Logs (Last 50)",
+          "type": "logs",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "{job=\"nginx\"} | json",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": false,
+            "showCommonLabels": false,
+            "wrapLogMessage": false,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
+        },
+        {
+          "id": 2,
+          "title": "HTTP Status Codes",
+          "type": "timeseries",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 6, "w": 12, "x": 0, "y": 8},
+          "targets": [
+            {
+              "expr": "sum by (status) (count_over_time({job=\"nginx\"} | json [5m]))",
+              "refId": "A",
+              "legendFormat": "Status {{status}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 20,
+                "stacking": {"mode": "normal"}
+              },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Request Rate",
+          "type": "timeseries",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 6, "w": 12, "x": 12, "y": 8},
+          "targets": [
+            {
+              "expr": "sum(rate({job=\"nginx\"} | json [1m]))",
+              "refId": "A",
+              "legendFormat": "Requests/sec"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 20
+              },
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "🎮 Total Jumps",
+          "type": "stat",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 24},
+          "targets": [
+            {
+              "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"player_jump\" [24h]))",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 9,
+          "title": "💥 Total Collisions",
+          "type": "stat",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 24},
+          "targets": [
+            {
+              "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_collision\" [24h]))",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "green"},
+                  {"value": 10, "color": "yellow"},
+                  {"value": 50, "color": "red"}
+                ]
+              },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 10,
+          "title": "🏆 Game Sessions",
+          "type": "stat",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 24},
+          "targets": [
+            {
+              "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_over\" [$__range]))",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 11,
+          "title": "⭐ High Score",
+          "type": "stat",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 24},
+          "targets": [
+            {
+              "expr": "max(max_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_over\" | event_data_sessionId!=\"null\" | event_data_sessionDuration > 30000 | unwrap event_data_finalScore [$__range]))",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "blue"},
+                  {"value": 100, "color": "green"},
+                  {"value": 500, "color": "yellow"},
+                  {"value": 1000, "color": "orange"},
+                  {"value": 5000, "color": "red"}
+                ]
+              },
+              "unit": "none",
+              "decimals": 0
+            }
+          }
+        },
+        {
+          "id": 12,
+          "title": "📊 Jumps Over Time",
+          "type": "timeseries",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+          "targets": [
+            {
+              "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"player_jump\" [5m]))",
+              "refId": "A",
+              "legendFormat": "Jumps per 5min"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 20
+              },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 13,
+          "title": "💥 Collisions Over Time",
+          "type": "timeseries",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+          "targets": [
+            {
+              "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_collision\" [5m]))",
+              "refId": "A",
+              "legendFormat": "Collisions per 5min"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 20
+              },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "id": 14,
+          "title": "🎯 Recent Game Events",
+          "type": "logs",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 10, "w": 24, "x": 0, "y": 36},
+          "targets": [
+            {
+              "expr": "{job=\"faro\"} | logfmt | kind=\"event\" | event_name=~\"player_jump|game_collision|game_over|high_score\"",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": false,
+            "prettifyLogMessage": true,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
+        },
+        {
+          "id": 15,
+          "title": "Error Logs",
+          "type": "logs",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 46},
+          "targets": [
+            {
+              "expr": "{job=\"nginx\"} | json | status >= 400",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "wrapLogMessage": false
+          }
+        }
+      ]
+    }
 
