@@ -120,7 +120,7 @@ Horizontal strip with 3 different Harkonnen soldier designs:
 
 ---
 
-## 4. CLOUD
+## 4. ORNITHOPTER
 
 ### Dimensions
 - **1x version:** 46px × 13px
@@ -136,7 +136,7 @@ Y_POSITION: Random between 30-71px from top
 ### Details
 - Single static image (no animation)
 - Moves slower than ground (creates parallax effect)
-- Speed: 0.2 (BG_CLOUD_SPEED)
+- Speed: 0.2 (BG_ORNITHOPTER_SPEED)
 
 ---
 
@@ -279,7 +279,7 @@ After creating new graphics:
 | Fremen | 262×47px | 524×94px | 6 | Horizontal sprite sheet |
 | Sandworm | 75×50px | 150×100px | 3 | Horizontal sprite sheet |
 | Harkonnen | 51×35px | 102×70px | 3 | Horizontal sprite sheet |
-| Cloud | 46×13px | 92×26px | 1 | Static image |
+| Ornithopter | 46×13px | 92×26px | 1 | Static image |
 | Horizon | 1200×12px | 2400×24px | 2 | Tiling sprite sheet |
 | Restart | 36×32px | 72×64px | 1 | Static image |
 | Text | 191×13px | 382×26px | 10+ | Vertical sprite sheet |
@@ -301,5 +301,5 @@ If using AI tools like DALL-E or Stable Diffusion:
 - "Pixel art running character sprite sheet, 6 frames, transparent background, gray color, minimalist style"
 - "Pixel art sandworm obstacle, side view, transparent background, gray monochrome"
 - "Pixel art Harkonnen soldier, 3 variants, standing guard, transparent background, gray monochrome"
-- "Simple pixel art cloud, transparent background, minimalist style"
+- "Pixel art ornithopter aircraft, side view, transparent background, gray monochrome, minimalist Dune style"
 

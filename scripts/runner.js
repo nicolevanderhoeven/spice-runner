@@ -76,15 +76,15 @@
      */
     Runner.config = {
         ACCELERATION: 0.001,
-        BG_CLOUD_SPEED: 0.2,
+        BG_ORNITHOPTER_SPEED: 0.2,
         BOTTOM_PAD: 10,
         CLEAR_TIME: 3000,
-        CLOUD_FREQUENCY: 0.5,
+        ORNITHOPTER_FREQUENCY: 0.5,
         GAMEOVER_CLEAR_TIME: 750,
         GAP_COEFFICIENT: 0.6,
         GRAVITY: 0.6,
         INITIAL_JUMP_VELOCITY: 12,
-        MAX_CLOUDS: 6,
+        MAX_ORNITHOPTERS: 6,
         MAX_OBSTACLE_LENGTH: 3,
         MAX_SPEED: 12,
         MIN_JUMP_HEIGHT: 35,
@@ -125,8 +125,8 @@
             name: 'HARKONNEN',
             id: '1x-harkonnen'
         }, {
-            name: 'CLOUD',
-            id: '1x-cloud'
+            name: 'ORNITHOPTER',
+            id: '1x-ornithopter'
         }, {
             name: 'HORIZON',
             id: '1x-horizon'
@@ -147,8 +147,8 @@
             name: 'HARKONNEN',
             id: '2x-harkonnen'
         }, {
-            name: 'CLOUD',
-            id: '2x-cloud'
+            name: 'ORNITHOPTER',
+            id: '2x-ornithopter'
         }, {
             name: 'HORIZON',
             id: '2x-horizon'
@@ -1644,38 +1644,38 @@
 
     //******************************************************************************
     /**
-     * Cloud background item.
+     * Ornithopter background item.
      * Similar to an obstacle object but without collision boxes.
      * @param {HTMLCanvasElement} canvas Canvas element.
-     * @param {Image} cloudImg
+     * @param {Image} ornithopterImg
      * @param {number} containerWidth
      */
-    function Cloud(canvas, cloudImg, containerWidth) {
+    function Ornithopter(canvas, ornithopterImg, containerWidth) {
         this.canvas = canvas;
         this.canvasCtx = this.canvas.getContext('2d');
-        this.image = cloudImg;
+        this.image = ornithopterImg;
         this.containerWidth = containerWidth;
         this.xPos = containerWidth;
         this.yPos = 0;
         this.remove = false;
-        this.cloudGap = getRandomNum(Cloud.config.MIN_CLOUD_GAP,
-            Cloud.config.MAX_CLOUD_GAP);
+        this.ornithopterGap = getRandomNum(Ornithopter.config.MIN_ORNITHOPTER_GAP,
+            Ornithopter.config.MAX_ORNITHOPTER_GAP);
         this.init();
     };
 
     /**
-     * Cloud object config.
+     * Ornithopter object config.
      * @enum {number}
      */
-    Cloud.config = {
+    Ornithopter.config = {
         HEIGHT: 13,
-        MAX_CLOUD_GAP: 400,
+        MAX_ORNITHOPTER_GAP: 400,
         MAX_SKY_LEVEL: 30,
-        MIN_CLOUD_GAP: 100,
+        MIN_ORNITHOPTER_GAP: 100,
         MIN_SKY_LEVEL: 71,
         WIDTH: 46
     };
-    Cloud.prototype = {
+    Ornithopter.prototype = {
         /**
          * Initialise the cloud. Sets the Cloud height.
          */
@@ -1854,12 +1854,12 @@
         this.gapCoefficient = gapCoefficient;
         this.obstacles = [];
         this.horizonOffsets = [0, 0];
-        this.cloudFrequency = this.config.CLOUD_FREQUENCY;
+        this.ornithopterFrequency = this.config.ORNITHOPTER_FREQUENCY;
 
         // Cloud
         this.clouds = [];
-        this.cloudImg = images.CLOUD;
-        this.cloudSpeed = this.config.BG_CLOUD_SPEED;
+        this.ornithopterImg = images.ORNITHOPTER;
+        this.ornithopterSpeed = this.config.BG_ORNITHOPTER_SPEED;
         // Horizon
         this.horizonImg = images.HORIZON;
         this.horizonLine = null;
@@ -1876,11 +1876,11 @@
      * @enum {number}
      */
     Horizon.config = {
-        BG_CLOUD_SPEED: 0.2,
+        BG_ORNITHOPTER_SPEED: 0.2,
         BUMPY_THRESHOLD: .3,
-        CLOUD_FREQUENCY: .5,
+        ORNITHOPTER_FREQUENCY: .5,
         HORIZON_HEIGHT: 16,
-        MAX_CLOUDS: 6
+        MAX_ORNITHOPTERS: 6
     };
     Horizon.prototype = {
         /**
@@ -1912,18 +1912,18 @@
          * @param {number} currentSpeed
          */
         updateClouds: function(deltaTime, speed) {
-            var cloudSpeed = this.cloudSpeed / 1000 * deltaTime * speed;
-            var numClouds = this.clouds.length;
-            if (numClouds) {
-                for (var i = numClouds - 1; i >= 0; i--) {
+            var cloudSpeed = this.ornithopterSpeed / 1000 * deltaTime * speed;
+            var numOrnithopters = this.clouds.length;
+            if (numOrnithopters) {
+                for (var i = numOrnithopters - 1; i >= 0; i--) {
                     this.clouds[i].update(cloudSpeed);
                 }
 
-                var lastCloud = this.clouds[numClouds - 1];
+                var lastCloud = this.clouds[numOrnithopters - 1];
                 // Check for adding a new cloud.
-                if (numClouds < this.config.MAX_CLOUDS &&
+                if (numOrnithopters < this.config.MAX_ORNITHOPTERS &&
                     (this.dimensions.WIDTH - lastCloud.xPos) > lastCloud.cloudGap &&
-                    this.cloudFrequency > Math.random()) {
+                    this.ornithopterFrequency > Math.random()) {
                     this.addCloud();
                 }
                 // Remove expired clouds.
@@ -1999,7 +1999,7 @@
          * Add a new cloud to the horizon.
          */
         addCloud: function() {
-            this.clouds.push(new Cloud(this.canvas, this.cloudImg,
+            this.clouds.push(new Ornithopter(this.canvas, this.ornithopterImg,
                 this.dimensions.WIDTH));
         }
     };
