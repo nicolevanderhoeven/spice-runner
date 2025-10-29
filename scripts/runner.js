@@ -454,7 +454,7 @@
 
                 // Check for collisions.
                 var collision = hasObstacles &&
-                    checkForCollision(this.horizon.obstacles[0], this.fremen);
+                    checkForCollision(this.horizon.obstacles[0], this.fremen, this.canvasCtx);
                 if (!collision) {
                     this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
                     if (this.currentSpeed < this.config.MAX_SPEED) {
