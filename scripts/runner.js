@@ -119,8 +119,8 @@
      */
     Runner.imageSources = {
         LDPI: [{
-            name: 'CACTUS_LARGE',
-            id: '1x-obstacle-large'
+            name: 'SANDWORM',
+            id: '1x-sandworm'
         }, {
             name: 'CACTUS_SMALL',
             id: '1x-obstacle-small'
@@ -141,8 +141,8 @@
             id: '1x-fremen'
         }],
         HDPI: [{
-            name: 'CACTUS_LARGE',
-            id: '2x-obstacle-large'
+            name: 'SANDWORM',
+            id: '2x-sandworm'
         }, {
             name: 'CACTUS_SMALL',
             id: '2x-obstacle-small'
@@ -1133,8 +1133,8 @@
             new CollisionBox(10, 4, 7, 14)
         ]
     }, {
-        type: 'CACTUS_LARGE',
-        className: ' cactus cactus-large ',
+        type: 'SANDWORM',
+        className: ' sandworm sandworm-large ',
         width: 25,
         height: 50,
         yPos: 90,
@@ -1866,7 +1866,7 @@
         // Obstacles
         this.obstacleImgs = {
             CACTUS_SMALL: images.CACTUS_SMALL,
-            CACTUS_LARGE: images.CACTUS_LARGE
+            SANDWORM: images.SANDWORM
         };
         this.init();
     };

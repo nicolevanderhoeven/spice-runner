@@ -60,7 +60,7 @@ The sprite is a horizontal strip with 6 frames:
 
 ---
 
-## 2. OBSTACLES - LARGE CACTUS
+## 2. OBSTACLES - SANDWORM
 
 ### Dimensions
 - **1x version:** 75px × 50px (3 variants side-by-side)
@@ -68,22 +68,22 @@ The sprite is a horizontal strip with 6 frames:
 
 ### Configuration
 ```javascript
-WIDTH: 25px per cactus
+WIDTH: 25px per sandworm
 HEIGHT: 50px
 Y_POSITION: 90px (from top of canvas)
 ```
 
 ### Sprite Sheet Layout
-Horizontal strip with 3 different large cactus designs:
-- **Cactus 1:** 0-25px (single tall cactus)
-- **Cactus 2:** 25-50px (wider cactus)
-- **Cactus 3:** 50-75px (multiple stems)
+Horizontal strip with 3 different sandworm designs:
+- **Sandworm 1:** 0-25px (single segment)
+- **Sandworm 2:** 25-50px (wider segment)
+- **Sandworm 3:** 50-75px (multiple segments)
 
 ### Collision Boxes
 ```javascript
 [
-  {x: 0, y: 12, width: 7, height: 38},   // Left stem
-  {x: 8, y: 0, width: 7, height: 49},    // Center stem
+  {x: 0, y: 12, width: 7, height: 38},   // Left segment
+  {x: 8, y: 0, width: 7, height: 49},    // Center segment
   {x: 13, y: 10, width: 10, height: 38}  // Right area
 ]
 ```
@@ -277,7 +277,7 @@ After creating new graphics:
 | Graphic | 1x Dimensions | 2x Dimensions | Frames | Type |
 |---------|---------------|---------------|--------|------|
 | Fremen | 262×47px | 524×94px | 6 | Horizontal sprite sheet |
-| Large Cactus | 75×50px | 150×100px | 3 | Horizontal sprite sheet |
+| Sandworm | 75×50px | 150×100px | 3 | Horizontal sprite sheet |
 | Small Cactus | 51×35px | 102×70px | 3 | Horizontal sprite sheet |
 | Cloud | 46×13px | 92×26px | 1 | Static image |
 | Horizon | 1200×12px | 2400×24px | 2 | Tiling sprite sheet |
@@ -299,6 +299,6 @@ If using AI tools like DALL-E or Stable Diffusion:
 
 ### Example Prompts:
 - "Pixel art running character sprite sheet, 6 frames, transparent background, gray color, minimalist style"
-- "Pixel art cactus obstacle, side view, transparent background, gray monochrome"
+- "Pixel art sandworm obstacle, side view, transparent background, gray monochrome"
 - "Simple pixel art cloud, transparent background, minimalist style"
 
