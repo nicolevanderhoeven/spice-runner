@@ -1,4 +1,4 @@
-# T-Rex Runner - Graphics Specifications
+# Spice Runner - Graphics Specifications
 
 Complete technical specifications for all game graphics.
 
@@ -15,7 +15,7 @@ The game uses **sprite sheets** (multiple frames in a single image) for animatio
 
 ---
 
-## 1. T-REX SPRITE SHEET
+## 1. FREMEN SPRITE SHEET
 
 ### Dimensions
 - **1x version:** 262px × 47px
@@ -276,7 +276,7 @@ After creating new graphics:
 
 | Graphic | 1x Dimensions | 2x Dimensions | Frames | Type |
 |---------|---------------|---------------|--------|------|
-| T-Rex | 262×47px | 524×94px | 6 | Horizontal sprite sheet |
+| Fremen | 262×47px | 524×94px | 6 | Horizontal sprite sheet |
 | Large Cactus | 75×50px | 150×100px | 3 | Horizontal sprite sheet |
 | Small Cactus | 51×35px | 102×70px | 3 | Horizontal sprite sheet |
 | Cloud | 46×13px | 92×26px | 1 | Static image |

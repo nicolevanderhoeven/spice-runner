@@ -1,7 +1,7 @@
 /**
- * T-Rex Runner Game Instrumentation with Grafana Faro
+ * Spice Runner Game Instrumentation with Grafana Faro
  * 
- * This script instruments the T-Rex game to track:
+ * This script instruments the Spice Runner game to track:
  * - Game sessions
  * - Player actions (jumps, ducks)
  * - Collisions
@@ -12,7 +12,7 @@
 (function() {
   'use strict';
 
-  console.log('🎮 Instrumenting T-Rex Runner with Faro...');
+  console.log('🎮 Instrumenting Spice Runner with Faro...');
 
   // Wait for both Faro and the game to be ready
   function waitForDependencies() {
@@ -156,7 +156,7 @@
       return originalRestart.apply(this, arguments);
     };
 
-    console.log('✅ T-Rex Runner instrumented with Faro');
+    console.log('✅ Spice Runner instrumented with Faro');
   });
 })();
 

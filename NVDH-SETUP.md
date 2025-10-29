@@ -121,7 +121,7 @@ curl https://nvdh.dev/spice
 # Check all resources are working
 curl https://nvdh.dev/spice/
 curl https://nvdh.dev/spice/scripts/runner.js
-curl https://nvdh.dev/spice/img/1x-trex.png
+curl https://nvdh.dev/spice/img/1x-fremen.png
 ```
 
 ## Troubleshooting

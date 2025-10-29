@@ -1,4 +1,4 @@
-# T-Rex Runner Observability Demo Guide
+# Spice Runner Observability Demo Guide
 
 ## 🎯 What You're Demoing
 
@@ -17,7 +17,7 @@ A **production-grade observability stack** for a Kubernetes application using:
 **URL**: https://nvdh.dev/spice/
 
 Say:
-> "Here's our T-Rex Runner game deployed on GKE with SSL. But the real magic is happening behind the scenes..."
+> "Here's our Spice Runner game deployed on GKE with SSL. But the real magic is happening behind the scenes..."
 
 ---
 
@@ -226,7 +226,7 @@ If you have 5 extra minutes:
    - **Error Rate**: `sum by (status) (rate(nginx_http_requests_total{status=~"4..|5.."}[5m]))`
    - **Recent Logs**: Use Loki panel with `{job="nginx/access"}`
 
-Save as "T-Rex Runner Overview"
+Save as "Spice Runner Overview"
 
 ---
 
