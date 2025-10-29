@@ -28,16 +28,34 @@
 
   waitForDependencies().then(() => {
     const faro = window.faroInstance;
-    let currentSessionId = null;
+    // Use the globally-set sessionId from faro-init.js
+    // This ensures consistency across all events from page load onwards
+    let currentSessionId = window.gameSessionId;
     let sessionStartTime = null;
+
+    // Defensive check: Log error if sessionId is null
+    if (!currentSessionId) {
+      console.error('❌ CRITICAL: sessionId is null! This should never happen.');
+      console.error('   Check that faro-init.js ran before faro-instrumentation.js');
+      console.error('   window.gameSessionId =', window.gameSessionId);
+    }
+
+    // Helper function to safely push events with sessionId validation
+    function safePushEvent(eventName, eventData) {
+      if (!currentSessionId) {
+        console.error(`❌ Cannot push event '${eventName}': sessionId is null!`, eventData);
+        return;
+      }
+      faro.api.pushEvent(eventName, eventData);
+    }
 
     // Track game initialization
     const originalInit = window.Runner.prototype.init;
     window.Runner.prototype.init = function() {
-      currentSessionId = Date.now().toString();
+      // Use existing sessionId (set at page load), don't create a new one
       sessionStartTime = Date.now();
       
-      faro.api.pushEvent('game_session_start', {
+      safePushEvent('game_session_start', {
         sessionId: currentSessionId,
         timestamp: sessionStartTime
       });
@@ -49,7 +67,7 @@
     // Track game start
     const originalPlayIntro = window.Runner.prototype.playIntro;
     window.Runner.prototype.playIntro = function() {
-      faro.api.pushEvent('game_start', {
+      safePushEvent('game_start', {
         sessionId: currentSessionId,
         timestamp: Date.now()
       });
@@ -75,7 +93,7 @@
       const result = originalOnKeyDown.apply(this, arguments);
       
       if (e.keyCode === 38 || e.keyCode === 32) { // Up arrow or Space
-        faro.api.pushEvent('player_jump', {
+        safePushEvent('player_jump', {
           sessionId: currentSessionId,
           score: getDisplayedScore(this),
           timestamp: Date.now()
@@ -91,13 +109,13 @@
       const finalScore = getDisplayedScore(this);
       const sessionDuration = Date.now() - sessionStartTime;
 
-      faro.api.pushEvent('game_collision', {
+      safePushEvent('game_collision', {
         sessionId: currentSessionId,
         score: finalScore,
         timestamp: Date.now()
       });
 
-      faro.api.pushEvent('game_over', {
+      safePushEvent('game_over', {
         sessionId: currentSessionId,
         finalScore: finalScore,
         sessionDuration: sessionDuration,
@@ -122,7 +140,7 @@
       // setHighScore receives the already-calculated display score
       const score = Math.floor(distance);
       
-      faro.api.pushEvent('high_score', {
+      safePushEvent('high_score', {
         sessionId: currentSessionId,
         score: score,
         timestamp: Date.now()
@@ -135,24 +153,15 @@
     // Track game restarts
     const originalRestart = window.Runner.prototype.restart;
     window.Runner.prototype.restart = function() {
-      // Log previous session end
-      if (currentSessionId) {
-        faro.api.pushEvent('game_session_end', {
-          sessionId: currentSessionId,
-          timestamp: Date.now()
-        });
-      }
-
-      // Start new session
-      currentSessionId = Date.now().toString();
+      // Log game restart (but keep same sessionId for the page session)
       sessionStartTime = Date.now();
       
-      faro.api.pushEvent('game_restart', {
+      safePushEvent('game_restart', {
         sessionId: currentSessionId,
         timestamp: Date.now()
       });
 
-      console.log('🔄 Game restarted, new session:', currentSessionId);
+      console.log('🔄 Game restarted, session:', currentSessionId);
       return originalRestart.apply(this, arguments);
     };
 

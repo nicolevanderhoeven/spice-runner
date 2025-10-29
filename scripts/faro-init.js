@@ -30,11 +30,22 @@
     // Store Faro instance globally (avoid window.faro which is read-only)
     window.faroInstance = faro;
 
+    // Generate session ID immediately at page load
+    // This ensures all events (including pre-game events) have a sessionId
+    window.gameSessionId = Date.now().toString();
+
     console.log('✅ Grafana Faro initialized successfully');
     console.log('📊 Sending telemetry to:', window.location.origin + '/alloy/collect');
+    console.log('🔑 Session ID:', window.gameSessionId);
+
+    // Defensive check: Verify sessionId was created
+    if (!window.gameSessionId) {
+      console.error('❌ CRITICAL: Failed to generate sessionId!');
+    }
 
     // Push initial event to confirm Faro is working
     faro.api.pushEvent('game_loaded', {
+      sessionId: window.gameSessionId,
       timestamp: Date.now(),
       userAgent: navigator.userAgent,
       screenResolution: `${window.screen.width}x${window.screen.height}`
