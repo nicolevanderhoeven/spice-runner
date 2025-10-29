@@ -90,7 +90,7 @@ Horizontal strip with 3 different sandworm designs:
 
 ---
 
-## 3. OBSTACLES - SMALL CACTUS
+## 3. OBSTACLES - HARKONNEN
 
 ### Dimensions
 - **1x version:** 51px × 35px (3 variants side-by-side)
@@ -98,23 +98,23 @@ Horizontal strip with 3 different sandworm designs:
 
 ### Configuration
 ```javascript
-WIDTH: 17px per cactus
+WIDTH: 17px per Harkonnen
 HEIGHT: 35px
 Y_POSITION: 105px (from top of canvas)
 ```
 
 ### Sprite Sheet Layout
-Horizontal strip with 3 different small cactus designs:
-- **Cactus 1:** 0-17px
-- **Cactus 2:** 17-34px
-- **Cactus 3:** 34-51px
+Horizontal strip with 3 different Harkonnen soldier designs:
+- **Harkonnen 1:** 0-17px
+- **Harkonnen 2:** 17-34px
+- **Harkonnen 3:** 34-51px
 
 ### Collision Boxes
 ```javascript
 [
-  {x: 0, y: 7, width: 5, height: 27},   // Left stem
-  {x: 4, y: 0, width: 6, height: 34},   // Center stem
-  {x: 10, y: 4, width: 7, height: 14}   // Right stem
+  {x: 0, y: 7, width: 5, height: 27},   // Left segment
+  {x: 4, y: 0, width: 6, height: 34},   // Center segment
+  {x: 10, y: 4, width: 7, height: 14}   // Right segment
 ]
 ```
 
@@ -278,7 +278,7 @@ After creating new graphics:
 |---------|---------------|---------------|--------|------|
 | Fremen | 262×47px | 524×94px | 6 | Horizontal sprite sheet |
 | Sandworm | 75×50px | 150×100px | 3 | Horizontal sprite sheet |
-| Small Cactus | 51×35px | 102×70px | 3 | Horizontal sprite sheet |
+| Harkonnen | 51×35px | 102×70px | 3 | Horizontal sprite sheet |
 | Cloud | 46×13px | 92×26px | 1 | Static image |
 | Horizon | 1200×12px | 2400×24px | 2 | Tiling sprite sheet |
 | Restart | 36×32px | 72×64px | 1 | Static image |
@@ -300,5 +300,6 @@ If using AI tools like DALL-E or Stable Diffusion:
 ### Example Prompts:
 - "Pixel art running character sprite sheet, 6 frames, transparent background, gray color, minimalist style"
 - "Pixel art sandworm obstacle, side view, transparent background, gray monochrome"
+- "Pixel art Harkonnen soldier, 3 variants, standing guard, transparent background, gray monochrome"
 - "Simple pixel art cloud, transparent background, minimalist style"
 

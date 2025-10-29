@@ -122,8 +122,8 @@
             name: 'SANDWORM',
             id: '1x-sandworm'
         }, {
-            name: 'CACTUS_SMALL',
-            id: '1x-obstacle-small'
+            name: 'HARKONNEN',
+            id: '1x-harkonnen'
         }, {
             name: 'CLOUD',
             id: '1x-cloud'
@@ -144,8 +144,8 @@
             name: 'SANDWORM',
             id: '2x-sandworm'
         }, {
-            name: 'CACTUS_SMALL',
-            id: '2x-obstacle-small'
+            name: 'HARKONNEN',
+            id: '2x-harkonnen'
         }, {
             name: 'CLOUD',
             id: '2x-cloud'
@@ -1120,8 +1120,8 @@
      * multipleSpeed: Speed at which multiples are allowed.
      */
     Obstacle.types = [{
-        type: 'CACTUS_SMALL',
-        className: ' cactus cactus-small ',
+        type: 'HARKONNEN',
+        className: ' harkonnen harkonnen-small ',
         width: 17,
         height: 35,
         yPos: 105,
@@ -1865,7 +1865,7 @@
         this.horizonLine = null;
         // Obstacles
         this.obstacleImgs = {
-            CACTUS_SMALL: images.CACTUS_SMALL,
+            HARKONNEN: images.HARKONNEN,
             SANDWORM: images.SANDWORM
         };
         this.init();
