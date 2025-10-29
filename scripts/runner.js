@@ -1122,7 +1122,7 @@
     Obstacle.types = [{
         type: 'HARKONNEN',
         className: ' harkonnen harkonnen-small ',
-        width: 17,
+        width: 34,
         height: 35,
         yPos: 105,
         multipleSpeed: 3,

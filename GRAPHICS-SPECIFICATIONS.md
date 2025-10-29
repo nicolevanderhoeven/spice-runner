@@ -93,21 +93,21 @@ Horizontal strip with 3 different sandworm designs:
 ## 3. OBSTACLES - HARKONNEN
 
 ### Dimensions
-- **1x version:** 51px × 35px (3 variants side-by-side)
-- **2x version:** 102px × 70px
+- **1x version:** 102px × 35px (3 variants side-by-side)
+- **2x version:** 204px × 70px
 
 ### Configuration
 ```javascript
-WIDTH: 17px per Harkonnen
+WIDTH: 34px per Harkonnen
 HEIGHT: 35px
 Y_POSITION: 105px (from top of canvas)
 ```
 
 ### Sprite Sheet Layout
 Horizontal strip with 3 different Harkonnen soldier designs:
-- **Harkonnen 1:** 0-17px
-- **Harkonnen 2:** 17-34px
-- **Harkonnen 3:** 34-51px
+- **Harkonnen 1:** 0-34px
+- **Harkonnen 2:** 34-68px
+- **Harkonnen 3:** 68-102px
 
 ### Collision Boxes
 ```javascript
@@ -278,7 +278,7 @@ After creating new graphics:
 |---------|---------------|---------------|--------|------|
 | Fremen | 262×47px | 524×94px | 6 | Horizontal sprite sheet |
 | Sandworm | 75×50px | 150×100px | 3 | Horizontal sprite sheet |
-| Harkonnen | 51×35px | 102×70px | 3 | Horizontal sprite sheet |
+| Harkonnen | 102×35px | 204×70px | 3 | Horizontal sprite sheet |
 | Ornithopter | 46×13px | 92×26px | 1 | Static image |
 | Horizon | 1200×12px | 2400×24px | 2 | Tiling sprite sheet |
 | Restart | 36×32px | 72×64px | 1 | Static image |
