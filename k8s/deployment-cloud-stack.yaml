@@ -44,7 +44,7 @@ spec:
         resources:
           requests:
             memory: "64Mi"
-            cpu: "20m"  # Lowered for easier HPA demo (70% = 14m trigger point)
+            cpu: "30m"  # Increased for KEDA - allows 1 pod to handle idle load without hitting 80% threshold
           limits:
             memory: "128Mi"
             cpu: "200m"
