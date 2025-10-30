@@ -55,26 +55,148 @@ spec:
       value: '80'               # Scale up when average memory > 80%
 
 ---
-# Optional: ScaledObject for more aggressive traffic-based scaling
-# Uncomment this if you want separate scaling behavior for high-traffic scenarios
-#
-# apiVersion: keda.sh/v1alpha1
-# kind: ScaledObject
-# metadata:
-#   name: spice-runner-keda-aggressive
-#   namespace: default
-# spec:
-#   scaleTargetRef:
-#     name: spice-runner
-#   minReplicaCount: 2
-#   maxReplicaCount: 20
-#   pollingInterval: 10
-#   cooldownPeriod: 60
-#   triggers:
-#   - type: prometheus
-#     metadata:
-#       serverAddress: http://prometheus.observability.svc.cluster.local:9090
-#       query: |
-#         sum(rate(nginx_http_requests_total{service="spice-runner-nginx"}[1m]))
-#       threshold: '200'        # Higher threshold for burst scaling
+# ============================================================================
+# OBSERVABILITY STACK AUTOSCALING
+# ============================================================================
+
+# Grafana ScaledObject - Scale based on CPU and Memory
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: grafana-keda
+  namespace: observability
+  labels:
+    app: grafana
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: grafana
+  
+  # Scale from 1 to 5 Grafana instances
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  
+  # Polling and cooldown settings
+  pollingInterval: 15           # Check metrics every 15 seconds
+  cooldownPeriod: 300           # Wait 5 minutes before scaling down (Grafana needs stability)
+  
+  # Fallback configuration
+  fallback:
+    failureThreshold: 3
+    replicas: 1
+  
+  triggers:
+  # CPU-based scaling
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: '60'               # Scale up when average CPU > 60%
+  
+  # Memory-based scaling
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: '70'               # Scale up when average memory > 70%
+
+---
+# Prometheus ScaledObject - Vertical scaling awareness (can add more triggers later)
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: prometheus-keda
+  namespace: observability
+  labels:
+    app: prometheus
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: prometheus
+  
+  # Keep at 1 replica (PVC constraint), but KEDA can monitor for alerts
+  minReplicaCount: 1
+  maxReplicaCount: 1
+  
+  pollingInterval: 30
+  cooldownPeriod: 300
+  
+  triggers:
+  # CPU monitoring (won't scale but good for visibility)
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: '200'              # Very high threshold since we can't horizontally scale
+  
+  # Memory monitoring
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: '200'              # Very high threshold since we can't horizontally scale
+
+---
+# Loki ScaledObject - Vertical scaling awareness
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: loki-keda
+  namespace: observability
+  labels:
+    app: loki
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: loki
+  
+  # Keep at 1 replica (PVC constraint)
+  minReplicaCount: 1
+  maxReplicaCount: 1
+  
+  pollingInterval: 30
+  cooldownPeriod: 300
+  
+  triggers:
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: '200'              # High threshold - monitoring only
+  
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: '200'              # High threshold - monitoring only
+
+---
+# Tempo ScaledObject - Vertical scaling awareness
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: tempo-keda
+  namespace: observability
+  labels:
+    app: tempo
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tempo
+  
+  # Keep at 1 replica (PVC constraint)
+  minReplicaCount: 1
+  maxReplicaCount: 1
+  
+  pollingInterval: 30
+  cooldownPeriod: 300
+  
+  triggers:
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: '200'              # High threshold - monitoring only
+  
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: '200'              # High threshold - monitoring only
 
