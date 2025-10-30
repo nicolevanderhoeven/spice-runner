@@ -1,10 +1,10 @@
-# KEDA Testing Guide
+# KEDA testing guide
 
 This guide explains how to test KEDA (Kubernetes Event-Driven Autoscaling) for the Spice Runner application.
 
-## What is KEDA?
+## What is KEDA
 
-**KEDA** is a Kubernetes-based event-driven autoscaler that extends Kubernetes' native autoscaling capabilities. Unlike HPA which primarily scales based on CPU/Memory, KEDA can scale based on:
+KEDA is a Kubernetes-based event-driven autoscaler that extends Kubernetes' native autoscaling capabilities. Unlike HPA which primarily scales based on CPU and memory, KEDA can scale based on the following:
 
 - HTTP request rates
 - Message queue depth
@@ -13,15 +13,17 @@ This guide explains how to test KEDA (Kubernetes Event-Driven Autoscaling) for t
 - Time-based schedules (cron)
 - 60+ other event sources
 
-**Key Features:**
-- ✅ Scale to zero (save costs when idle)
-- ✅ Event-driven scaling (based on actual workload)
-- ✅ Multiple triggers (AND/OR logic)
-- ✅ Simple configuration (no Custom Metrics API needed)
+**Key features:**
 
-## Quick Start
+- Scale to zero (save costs when idle)
+- Event-driven scaling (based on actual workload)
+- Multiple triggers (AND/OR logic)
+- Simple configuration (no Custom Metrics API needed)
 
-**TL;DR - Install KEDA and run test in 3 commands:**
+## Quick start
+
+To install KEDA and run a test, use the following commands:
+
 ```bash
 # 1. Install KEDA and apply ScaledObject
 ./scripts/install-keda.sh
@@ -39,23 +41,31 @@ The script automatically detects KEDA and monitors scaling behavior including sc
 
 ## Installation
 
-### Method 1: Automated Installation (Recommended)
+KEDA can be installed using either the automated script or manual steps.
+
+### Method 1: Automated installation (recommended)
+
+To install KEDA automatically, run the following command:
 
 ```bash
 ./scripts/install-keda.sh
 ```
 
-This script will:
-1. ✅ Check prerequisites (kubectl, helm)
-2. ✅ Install KEDA operator via Helm
-3. ✅ Apply ScaledObject configuration
-4. ✅ Handle existing HPA (offers to remove it)
-5. ✅ Verify installation
-6. ✅ Show status and next steps
+This script performs the following tasks:
 
-### Method 2: Manual Installation
+1. Check prerequisites (`kubectl`, `helm`)
+2. Install KEDA operator via Helm
+3. Apply ScaledObject configuration
+4. Handle existing HPA (offers to remove it)
+5. Verify installation
+6. Show status and next steps
+
+### Method 2: Manual installation
+
+To install KEDA manually, complete the following steps.
 
 **Step 1: Install KEDA**
+
 ```bash
 # Add KEDA Helm repository
 helm repo add kedacore https://kedacore.github.io/charts
@@ -68,7 +78,8 @@ helm install keda kedacore/keda \
   --wait
 ```
 
-**Step 2: Verify KEDA Installation**
+**Step 2: Verify KEDA installation**
+
 ```bash
 # Check KEDA pods
 kubectl get pods -n keda
@@ -79,22 +90,26 @@ kubectl get pods -n keda
 # keda-operator-metrics-apiserver-xxxxx     1/1     Running   0          1m
 ```
 
-**Step 3: Remove Existing HPA (if present)**
+**Step 3: Remove existing HPA (if present)**
+
 ```bash
 # KEDA creates its own HPA, so remove the old one
 kubectl delete hpa spice-runner-hpa -n default
 ```
 
 **Step 4: Apply KEDA ScaledObject**
+
 ```bash
 kubectl apply -f k8s/keda-scaledobject.yaml
 ```
 
 ---
 
-## KEDA Configuration Overview
+## KEDA configuration overview
 
-### ScaledObject Specification
+The following section describes the ScaledObject specification for this project.
+
+### ScaledObject specification
 
 ```yaml
 apiVersion: keda.sh/v1alpha1

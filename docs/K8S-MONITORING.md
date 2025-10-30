@@ -1,10 +1,14 @@
-# Kubernetes Cluster Monitoring
-
-## Quick Start
+# Kubernetes cluster monitoring
 
 This project includes a comprehensive Kubernetes cluster monitoring solution built on Prometheus and Grafana.
 
-### Deploy the Monitoring Stack
+## Quick start
+
+Follow these steps to deploy and access the monitoring stack.
+
+### Deploy the monitoring stack
+
+To deploy all observability components including Kubernetes monitoring, run the following commands:
 
 ```bash
 # Deploy all observability components including K8s monitoring
@@ -14,7 +18,9 @@ kubectl apply -f k8s/observability-stack.yaml
 ./scripts/verify-k8s-monitoring.sh
 ```
 
-### Access the Dashboard
+### Access the dashboard
+
+To access Grafana, run the following command:
 
 ```bash
 # Port forward to Grafana
@@ -24,9 +30,9 @@ kubectl port-forward -n observability svc/grafana 3000:3000
 Then open http://localhost:3000 and navigate to:
 **Dashboards → Demos → Kubernetes Cluster Monitoring**
 
-## What You Get
+## What you get
 
-### 📊 Kubernetes Cluster Monitoring Dashboard
+### Kubernetes Cluster Monitoring dashboard
 
 A comprehensive dashboard showing:
 
@@ -51,7 +57,9 @@ A comprehensive dashboard showing:
 - Container restart tracking
 - Node information and status
 
-### 🔧 Components
+### Components
+
+The monitoring solution includes the following components.
 
 #### 1. **kube-state-metrics**
 - Exposes Kubernetes API object metrics

@@ -1,21 +1,19 @@
-# Spice Runner - Graphics Specifications
+# Spice Runner graphics specifications
 
-Complete technical specifications for all game graphics.
-
----
+This document provides complete technical specifications for all game graphics.
 
 ## Overview
 
-The game uses **sprite sheets** (multiple frames in a single image) for animations. Each graphic has two versions:
-- **1x** - Standard resolution (600x150 game canvas)
-- **2x** - High-DPI/Retina displays (double the dimensions)
+The game uses sprite sheets (multiple frames in a single image) for animations. Each graphic has two versions:
 
-**File Format:** PNG with transparency
-**Color Mode:** Grayscale/monochrome style (dark gray #535353 on transparent)
+- **1x**: Standard resolution (600x150 game canvas)
+- **2x**: High-DPI/Retina displays (double the dimensions)
 
----
+**File format**: PNG with transparency
 
-## 1. FREMEN SPRITE SHEET
+**Color mode**: Grayscale/monochrome style (dark gray `#535353` on transparent)
+
+## Fremen sprite sheet
 
 ### Dimensions
 - **1x version:** 262px × 47px
@@ -58,9 +56,7 @@ The sprite is a horizontal strip with 6 frames:
 ]
 ```
 
----
-
-## 2. OBSTACLES - SANDWORM
+## Obstacles - Sandworm
 
 ### Dimensions
 - **1x version:** 75px × 50px (3 variants side-by-side)
@@ -88,9 +84,7 @@ Horizontal strip with 3 different sandworm designs:
 ]
 ```
 
----
-
-## 3. OBSTACLES - HARKONNEN
+## Obstacles - Harkonnen
 
 ### Dimensions
 - **1x version:** 102px × 35px (3 variants side-by-side)
@@ -118,9 +112,7 @@ Horizontal strip with 3 different Harkonnen soldier designs:
 ]
 ```
 
----
-
-## 4. ORNITHOPTER
+## Ornithopter
 
 ### Dimensions
 - **1x version:** 46px × 13px
@@ -138,9 +130,7 @@ Y_POSITION: Random between 30-71px from top
 - Moves slower than ground (creates parallax effect)
 - Speed: 0.2 (BG_ORNITHOPTER_SPEED)
 
----
-
-## 5. HORIZON (GROUND)
+## Horizon (ground)
 
 ### Dimensions
 - **1x version:** 1200px × 12px
@@ -159,9 +149,7 @@ Y_POSITION: 127px (from top of canvas)
 - Each section is 600px wide
 - Contains subtle texture/pattern
 
----
-
-## 6. RESTART BUTTON
+## Restart button
 
 ### Dimensions
 - **1x version:** 36px × 32px
@@ -178,9 +166,7 @@ HEIGHT: 32px
 - Appears centered on screen after game over
 - Single static image
 
----
-
-## 7. TEXT SPRITE SHEET
+## Text sprite sheet
 
 ### Dimensions
 - **1x version:** 191px × 13px (approximate, contains digits 0-9 and "GAME OVER" text)
@@ -220,22 +206,25 @@ Vertical arrangement of characters:
 
 Plus "GAME OVER" text at Y: 13px
 
----
+## Design guidelines
 
-## Design Guidelines
+Follow these guidelines when creating or modifying game graphics.
 
-### Color Palette
+### Color palette
 - **Primary Color:** #535353 (dark gray)
 - **Background:** Transparent
 - **Style:** Flat, minimalist, pixel art aesthetic
 
-### Technical Requirements
-1. **Transparency:** All sprites must have transparent backgrounds
-2. **Anti-aliasing:** Minimal or none (crisp pixel edges)
-3. **Alignment:** Sprites must align to exact pixel boundaries
-4. **Consistency:** Maintain consistent line weights across all graphics
+### Technical requirements
 
-### Creating Custom Graphics
+All graphics must meet the following technical requirements:
+
+1. **Transparency**: All sprites must have transparent backgrounds
+2. **Anti-aliasing**: Minimal or none (crisp pixel edges)
+3. **Alignment**: Sprites must align to exact pixel boundaries
+4. **Consistency**: Maintain consistent line weights across all graphics
+
+### Creating custom graphics
 
 #### For 1x version:
 1. Create at exact dimensions listed above
@@ -249,18 +238,14 @@ Plus "GAME OVER" text at Y: 13px
 3. Keep pixel alignment (double each pixel)
 4. Test on high-DPI display if possible
 
----
-
-## Game Canvas Context
+## Game canvas context
 
 - **Canvas Size:** 600px × 150px (default)
 - **Background Color:** #f7f7f7 (light gray)
 - **Frame Rate:** 60 FPS
 - **Scaling:** Auto-detected based on devicePixelRatio
 
----
-
-## Testing Your Graphics
+## Testing your graphics
 
 After creating new graphics:
 1. Replace the appropriate PNG file in `/img/` directory
@@ -270,9 +255,7 @@ After creating new graphics:
 5. Verify animations look smooth at 60 FPS
 6. Check collision detection still works properly
 
----
-
-## Quick Reference Table
+## Quick reference table
 
 | Graphic | 1x Dimensions | 2x Dimensions | Frames | Type |
 |---------|---------------|---------------|--------|------|
@@ -284,9 +267,7 @@ After creating new graphics:
 | Restart | 36×32px | 72×64px | 1 | Static image |
 | Text | 191×13px | 382×26px | 10+ | Vertical sprite sheet |
 
----
-
-## Notes for AI Image Generation
+## Notes for AI image generation
 
 If using AI tools like DALL-E or Stable Diffusion:
 

@@ -1,10 +1,11 @@
-# HPA Testing Guide
+# HPA testing guide
 
 This guide explains how to test the Horizontal Pod Autoscaler (HPA) for the Spice Runner application using k6 load tests.
 
-## Quick Start
+## Quick start
 
-**TL;DR - Run a load test in 3 commands:**
+You can run a load test with three commands:
+
 ```bash
 # 1. Apply HPA
 kubectl apply -f k8s/hpa.yaml
@@ -16,22 +17,24 @@ brew install k6  # macOS
 ./scripts/run-hpa-test.sh
 ```
 
-The automated script will detect your service URL, generate realistic load, and monitor HPA scaling in real-time.
-
----
+The automated script detects your service URL, generates realistic load, and monitors HPA scaling in real-time.
 
 ## Prerequisites
 
-### 1. Metrics Server
+Before you begin, ensure the following prerequisites are met.
+
+### Metrics Server
 
 HPA requires Kubernetes Metrics Server to be installed in your cluster.
 
-**Check if metrics-server is running:**
+To check if metrics-server is running, run the following command:
+
 ```bash
 kubectl get deployment metrics-server -n kube-system
 ```
 
-**Install if missing:**
+If missing, install metrics-server by running the following command:
+
 ```bash
 # For most clusters
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
@@ -39,15 +42,18 @@ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/late
 # For GKE, metrics-server is pre-installed
 ```
 
-**Verify metrics are available:**
+To verify metrics are available, run the following commands:
+
 ```bash
 kubectl top nodes
 kubectl top pods -n default
 ```
 
-### 2. Install k6
+### Install k6
 
-k6 is a modern load testing tool that runs **outside** your cluster to generate realistic traffic.
+k6 is a modern load testing tool that runs outside your cluster to generate realistic traffic.
+
+To install k6, run the following command for your operating system:
 
 ```bash
 # macOS
@@ -70,29 +76,33 @@ choco install k6
 k6 version
 ```
 
-**Alternative:** Download from [k6.io/docs/get-started/installation](https://k6.io/docs/get-started/installation/)
+**Alternative**: Download from [k6.io/docs/get-started/installation](https://k6.io/docs/get-started/installation/)
 
-### 3. Apply HPA Configuration
+### Apply HPA configuration
+
+To apply the HPA configuration, run the following command:
 
 ```bash
 kubectl apply -f k8s/hpa.yaml
 ```
 
-**Verify HPA is created:**
+To verify HPA is created, run the following commands:
+
 ```bash
 kubectl get hpa -n default
 kubectl describe hpa spice-runner-hpa -n default
 ```
 
-Expected output:
+The output should resemble the following:
+
 ```
 NAME                REFERENCE                 TARGETS         MINPODS   MAXPODS   REPLICAS
 spice-runner-hpa    Deployment/spice-runner   5%/70%, 10%/75%   2         10        2
 ```
 
-### 4. Get Your Service URL
+### Get your service URL
 
-Determine how to access your application:
+Determine how to access your application by running the following commands:
 
 ```bash
 # Option 1: Check Ingress (if using)

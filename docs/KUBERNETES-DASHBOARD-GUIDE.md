@@ -1,60 +1,70 @@
-# Kubernetes Cluster Monitoring Dashboard Guide
+# Kubernetes cluster monitoring dashboard guide
 
 This guide explains how to deploy and use the Kubernetes cluster monitoring dashboard that has been added to your observability stack.
 
 ## Overview
 
-The Kubernetes cluster monitoring dashboard provides comprehensive visibility into your Kubernetes cluster's health and performance, including:
+The Kubernetes cluster monitoring dashboard provides comprehensive visibility into your Kubernetes cluster's health and performance. The dashboard includes the following information:
 
-- **Node count and status**
-- **Pod count (total, running, failed)**
-- **CPU utilization** (cluster-wide and by namespace)
-- **Memory utilization** (cluster-wide and by namespace)
-- **Network I/O**
-- **Container restarts**
-- **Resource inventory** (deployments, services, etc.)
+- Node count and status
+- Pod count (total, running, failed)
+- CPU utilization (cluster-wide and by namespace)
+- Memory utilization (cluster-wide and by namespace)
+- Network I/O
+- Container restarts
+- Resource inventory (deployments, services, etc.)
 
-## Components Added
+## Components added
+
+The following components have been added to your observability stack.
 
 ### 1. kube-state-metrics
 
-`kube-state-metrics` is a service that exposes Kubernetes cluster state metrics to Prometheus. It provides metrics about:
+`kube-state-metrics` is a service that exposes Kubernetes cluster state metrics to Prometheus. It provides metrics about the following resources:
+
 - Nodes
 - Pods
 - Deployments
 - Services
 - Persistent volumes
-- And more...
 
-**Deployed to:** `kube-system` namespace
+**Deployed to**: `kube-system` namespace
 
-### 2. Prometheus Scrape Configuration
+### 2. Prometheus scrape configuration
 
-Added the following scrape jobs to Prometheus:
-- `kube-state-metrics` - Scrapes cluster state metrics
-- `kubernetes-nodes` - Scrapes node-level metrics
-- `kubernetes-pods` - Scrapes pod-level metrics (for pods with Prometheus annotations)
+The following scrape jobs have been added to Prometheus:
 
-### 3. Kubernetes Cluster Dashboard
+- `kube-state-metrics`: Scrapes cluster state metrics
+- `kubernetes-nodes`: Scrapes node-level metrics
+- `kubernetes-pods`: Scrapes pod-level metrics (for pods with Prometheus annotations)
+
+### 3. Kubernetes Cluster dashboard
 
 A comprehensive Grafana dashboard with 17 panels displaying various cluster metrics.
 
-**Dashboard UID:** `kubernetes-cluster-monitoring`
+**Dashboard UID**: `kubernetes-cluster-monitoring`
 
-## Deployment Instructions
+## Deployment instructions
 
-### Deploy the Updated Observability Stack
+Follow these steps to deploy the updated observability stack.
+
+### Deploy the updated observability stack
+
+To deploy the observability stack with Kubernetes monitoring, run the following command:
 
 ```bash
 kubectl apply -f k8s/observability-stack.yaml
 ```
 
-This will:
+This command performs the following actions:
+
 1. Deploy kube-state-metrics to the `kube-system` namespace
 2. Update Prometheus configuration to scrape Kubernetes metrics
 3. Add the new Kubernetes dashboard to Grafana
 
-### Verify kube-state-metrics Deployment
+### Verify kube-state-metrics deployment
+
+To verify kube-state-metrics is running, use the following commands:
 
 ```bash
 # Check if kube-state-metrics is running
@@ -68,7 +78,9 @@ kubectl port-forward -n kube-system svc/kube-state-metrics 8080:8080
 # Then visit http://localhost:8080/metrics in your browser
 ```
 
-### Verify Prometheus is Scraping Metrics
+### Verify Prometheus is scraping metrics
+
+To verify Prometheus is scraping Kubernetes metrics, use the following commands:
 
 ```bash
 # Port-forward to Prometheus

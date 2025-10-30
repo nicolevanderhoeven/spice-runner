@@ -1,31 +1,41 @@
-# KEDA Quick Start Guide
+# KEDA quick start guide
 
-This is a quick reference for installing and testing KEDA with Spice Runner.
+This guide provides a quick reference for installing and testing KEDA with Spice Runner.
 
 ## Prerequisites
 
-- ✅ Kubernetes cluster running (GKE, EKS, etc.)
-- ✅ `kubectl` configured
-- ✅ `helm` installed
-- ✅ `k6` installed for load testing
-- ✅ Spice Runner deployed
-- ✅ Observability stack running (Prometheus)
+Before you begin, ensure you have the following:
 
-## Installation (3 Steps)
+- Kubernetes cluster running (GKE, EKS, etc.)
+- `kubectl` configured
+- `helm` installed
+- `k6` installed for load testing
+- Spice Runner deployed
+- Observability stack running (Prometheus)
+
+## Installation
+
+Follow these three steps to install and test KEDA.
 
 ### Step 1: Install KEDA
+
+To install KEDA, run the following command:
+
+
 
 ```bash
 ./scripts/install-keda.sh
 ```
 
-This script handles everything:
+This script handles the following tasks:
+
 - Installs KEDA operator
 - Applies ScaledObject configuration
 - Removes conflicting HPA (if present)
 - Verifies installation
 
-**Manual alternative:**
+**Manual alternative**:
+
 ```bash
 # Install KEDA
 helm repo add kedacore https://kedacore.github.io/charts
@@ -39,7 +49,9 @@ kubectl delete hpa spice-runner-hpa -n default
 kubectl apply -f k8s/keda-scaledobject.yaml
 ```
 
-### Step 2: Verify Installation
+### Step 2: Verify installation
+
+To verify the installation, run the following commands:
 
 ```bash
 # Check KEDA pods
@@ -52,7 +64,9 @@ kubectl get scaledobject spice-runner-keda -n default
 kubectl get pods -l app=spice-runner -n default
 ```
 
-### Step 3: Run Load Test
+### Step 3: Run load test
+
+To run a load test, use the following commands:
 
 ```bash
 # Automated test with monitoring
@@ -64,16 +78,21 @@ kubectl get pods -l app=spice-runner -n default
 ./scripts/run-hpa-test.sh standard # Full 15-min test
 ```
 
-## What to Expect
+## What to expect
 
-### Before Test (Scaled to Zero)
+KEDA enables scale-to-zero capability for cost optimization.
+
+### Before test (scaled to zero)
+
 ```bash
 $ kubectl get pods -l app=spice-runner
 No resources found in default namespace.
 ```
-💰 **Cost: $0** - No pods running!
 
-### During Test (Auto-Scaled)
+**Cost**: $0 - No pods running
+
+### During test (auto-scaled)
+
 ```bash
 $ kubectl get pods -l app=spice-runner
 NAME                            READY   STATUS    RESTARTS   AGE
@@ -83,17 +102,20 @@ spice-runner-xxxxxxxxxx-ccccc   2/2     Running   0          45s
 spice-runner-xxxxxxxxxx-ddddd   2/2     Running   0          30s
 spice-runner-xxxxxxxxxx-eeeee   2/2     Running   0          15s
 ```
-📈 **Scaled to 5+ pods** based on traffic!
 
-### After Test (Scaled Back to Zero)
+**Scaled to 5+ pods** based on traffic
+
+### After test (scaled back to zero)
+
 ```bash
 # Wait 5 minutes after load stops
 $ kubectl get pods -l app=spice-runner
 No resources found in default namespace.
 ```
-💰 **Cost: $0** - Back to zero pods!
 
-## KEDA Configuration Summary
+**Cost**: $0 - Back to zero pods
+
+## KEDA configuration summary
 
 Your KEDA setup scales **0 to 10 pods** based on:
 
@@ -103,15 +125,18 @@ Your KEDA setup scales **0 to 10 pods** based on:
 | **CPU** | 70% | Prevent CPU saturation |
 | **Memory** | 75% | Prevent OOM |
 
-**Scaling Behavior:**
-- **Wake from zero:** 1 req/s triggers activation
-- **Scale up:** Any trigger above threshold
-- **Scale down:** 5 minutes after ALL triggers below threshold
-- **Cold start:** ~20-30 seconds from zero to serving traffic
+**Scaling behavior:**
 
-## Monitoring Commands
+- **Wake from zero**: 1 req/s triggers activation
+- **Scale up**: Any trigger above threshold
+- **Scale down**: 5 minutes after all triggers below threshold
+- **Cold start**: Approximately 20-30 seconds from zero to serving traffic
 
-### Watch Scaling in Real-Time
+## Monitoring commands
+
+Use these commands to monitor KEDA scaling behavior.
+
+### Watch scaling in real-time
 
 ```bash
 # Monitor ScaledObject
@@ -127,7 +152,9 @@ watch kubectl top pods -l app=spice-runner
 kubectl logs -n keda -l app.kubernetes.io/name=keda-operator -f --tail=20
 ```
 
-### Check Status
+### Check status
+
+To check KEDA status, run the following commands:
 
 ```bash
 # ScaledObject details
@@ -140,9 +167,11 @@ kubectl get hpa -n default
 kubectl get events --sort-by='.lastTimestamp' | grep -i keda
 ```
 
-## Testing Scenarios
+## Testing scenarios
 
-### Test 1: Scale from Zero
+Use these scenarios to test different KEDA capabilities.
+
+### Test 1: Scale from zero
 ```bash
 # Ensure at zero
 kubectl scale deployment spice-runner --replicas=0
@@ -157,7 +186,7 @@ curl https://your-domain.com/spice/
 watch kubectl get pods -l app=spice-runner
 ```
 
-### Test 2: Load-Based Scaling
+### Test 2: Load-based scaling
 ```bash
 # Run spike test (high load)
 ./scripts/run-hpa-test.sh spike
@@ -166,7 +195,7 @@ watch kubectl get pods -l app=spice-runner
 watch kubectl get scaledobject spice-runner-keda
 ```
 
-### Test 3: Scale to Zero
+### Test 3: Scale to zero
 ```bash
 # Run quick test
 ./scripts/run-hpa-test.sh quick
@@ -178,27 +207,35 @@ watch kubectl get pods -l app=spice-runner
 
 ## Troubleshooting
 
-### Pods Not Scaling
+This section helps you diagnose common KEDA issues.
 
-**Check ScaledObject:**
+### Pods not scaling
+
+To check the ScaledObject, run the following command:
+
 ```bash
 kubectl describe scaledobject spice-runner-keda
 ```
 
-**Check Prometheus connectivity:**
+To check Prometheus connectivity, run the following command:
+
 ```bash
 kubectl port-forward -n observability svc/prometheus 9090:9090
 # Open: http://localhost:9090
 # Query: sum(rate(nginx_http_requests_total{service="spice-runner-nginx"}[1m]))
 ```
 
-### Not Scaling to Zero
+### Not scaling to zero
 
-**Wait longer:**
+If pods don't scale to zero, try the following:
+
+**Wait longer**:
+
 - Default cooldown is 5 minutes
-- Ensure NO traffic for full 5 minutes
+- Ensure no traffic for full 5 minutes
 
-**Force faster cooldown (testing only):**
+**Force faster cooldown (testing only)**:
+
 ```bash
 kubectl patch scaledobject spice-runner-keda --type merge -p '
   spec:
@@ -206,27 +243,30 @@ kubectl patch scaledobject spice-runner-keda --type merge -p '
 '
 ```
 
-### KEDA Not Working
+### KEDA not working
 
-**Check KEDA pods:**
+To check KEDA pods, run the following command:
+
 ```bash
 kubectl get pods -n keda
 ```
 
-**Restart KEDA:**
+To restart KEDA, run the following commands:
+
 ```bash
 kubectl rollout restart deployment keda-operator -n keda
 kubectl rollout restart deployment keda-operator-metrics-apiserver -n keda
 ```
 
-**View KEDA logs:**
+To view KEDA logs, run the following command:
+
 ```bash
 kubectl logs -n keda -l app.kubernetes.io/name=keda-operator --tail=100
 ```
 
 ## Uninstall KEDA
 
-If you want to switch back to HPA:
+If you want to switch back to HPA, run the following commands:
 
 ```bash
 # Delete ScaledObject
@@ -239,31 +279,35 @@ helm uninstall keda -n keda
 kubectl apply -f k8s/hpa.yaml
 ```
 
-## Cost Savings Calculator
+## Cost savings calculator
 
-**Scenario:** Dev/test environment with 8 hours of usage per day
+**Scenario**: Development/test environment with 8 hours of usage per day
 
 ### With HPA (minReplicas: 2)
+
 - 24 hours × 2 pods = **48 pod-hours/day**
 - 30 days = **1,440 pod-hours/month**
 - At $0.10/pod-hour = **$144/month**
 
 ### With KEDA (minReplicaCount: 0)
-- 8 hours × 2 pods (avg) = **16 pod-hours/day**
+
+- 8 hours × 2 pods (average) = **16 pod-hours/day**
 - 30 days = **480 pod-hours/month**
 - At $0.10/pod-hour = **$48/month**
 
-**💰 Savings: $96/month (67% reduction)**
+**Savings**: $96/month (67% reduction)
 
-## Next Steps
+## Next steps
 
-1. ✅ **Monitor in Grafana** - View scaling metrics in dashboards
-2. ✅ **Set up alerts** - Alert on scaling events or errors
-3. ✅ **Tune thresholds** - Adjust based on actual traffic patterns
-4. ✅ **Add time-based scaling** - Pre-scale during known busy hours
-5. ✅ **Consider Karpenter** - Add node-level autoscaling next
+After successful installation, consider the following next steps:
 
-## Key Files
+1. **Monitor in Grafana**: View scaling metrics in dashboards
+2. **Set up alerts**: Alert on scaling events or errors
+3. **Tune thresholds**: Adjust based on actual traffic patterns
+4. **Add time-based scaling**: Pre-scale during known busy hours
+5. **Consider Karpenter**: Add node-level autoscaling next
+
+## Key files
 
 - `k8s/keda-scaledobject.yaml` - KEDA configuration
 - `scripts/install-keda.sh` - Installation script

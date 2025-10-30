@@ -1,13 +1,17 @@
-# Setup Guide for nvdh.dev/spice
+# Setup guide for nvdh.dev/spice
 
-This guide is customized for deploying Spice Runner at `https://nvdh.dev/spice`.
+This guide helps you deploy Spice Runner at `https://nvdh.dev/spice`.
 
 ## Prerequisites
 
-- GKE cluster is running with your app deployed
+Before you begin, ensure you have the following:
+
+- GKE cluster is running with your application deployed
 - You have access to DNS settings for nvdh.dev
 
-## Step 1: Reserve Static IP
+## Step 1: Reserve static IP
+
+To reserve a static IP address, run the following commands:
 
 ```bash
 # Reserve a global static IP
@@ -17,7 +21,9 @@ gcloud compute addresses create spice-runner-ip --global
 gcloud compute addresses describe spice-runner-ip --global --format="get(address)"
 ```
 
-**Save this IP address!** You'll need it in the next step.
+{{< admonition type="note" >}}
+Save this IP address. You'll need it in the next step.
+{{< /admonition >}}
 
 ## Step 2: Configure DNS
 
@@ -30,7 +36,8 @@ Value: <THE_STATIC_IP_FROM_STEP_1>
 TTL: 3600
 ```
 
-**Verify DNS propagation:**
+To verify DNS propagation, run the following command:
+
 ```bash
 dig nvdh.dev
 
@@ -40,9 +47,9 @@ nslookup nvdh.dev
 
 Wait until the DNS resolves to your new IP before continuing (can take 5-60 minutes).
 
-## Step 3: Rebuild Docker Image
+## Step 3: Rebuild Docker image
 
-The Nginx configuration has been updated to serve content from `/spice` path. Rebuild and push:
+The NGINX configuration has been updated to serve content from the `/spice` path. To rebuild and push the image, run the following commands:
 
 ```bash
 # Rebuild with the new nginx.conf
@@ -55,9 +62,9 @@ docker push gcr.io/dev-advocacy-380120/spice-runner:latest
 kubectl rollout restart deployment/spice-runner
 ```
 
-## Step 4: Update Service Type
+## Step 4: Update service type
 
-The service needs to be ClusterIP (not LoadBalancer) for Ingress to work:
+The service needs to be ClusterIP (not LoadBalancer) for Ingress to work. To update the service, run the following commands:
 
 ```bash
 # Apply the updated service configuration
@@ -67,7 +74,9 @@ kubectl apply -f k8s/service.yaml
 kubectl get service spice-runner-service
 ```
 
-## Step 5: Deploy Certificate and Ingress
+## Step 5: Deploy certificate and ingress
+
+To deploy the managed certificate and ingress, run the following commands:
 
 ```bash
 # Deploy the managed certificate
@@ -83,9 +92,9 @@ kubectl get ingress spice-runner-ingress
 kubectl describe managedcertificate spice-runner-cert
 ```
 
-## Step 6: Wait for Certificate Provisioning
+## Step 6: Wait for certificate provisioning
 
-Google's managed certificate takes **10-20 minutes** to provision:
+Google's managed certificate takes 10-20 minutes to provision. To monitor the certificate status, run the following command:
 
 ```bash
 # Watch certificate status
@@ -94,22 +103,24 @@ watch kubectl describe managedcertificate spice-runner-cert
 # Look for status: Active (means it's ready!)
 ```
 
-**Certificate Status Meanings:**
-- `Provisioning` - Certificate is being created (normal, wait 10-20 min)
-- `Active` - Certificate ready! HTTPS is working
-- `FailedNotVisible` - DNS not configured or hasn't propagated yet
+**Certificate status meanings:**
 
-## Step 7: Access Your Game! 🎮
+- `Provisioning`: Certificate is being created (normal, wait 10-20 minutes)
+- `Active`: Certificate ready, HTTPS is working
+- `FailedNotVisible`: DNS not configured or hasn't propagated yet
 
-Once the certificate shows **Active**:
+## Step 7: Access your game
 
-### Your game will be available at:
-- **HTTPS:** `https://nvdh.dev/spice`
-- **HTTP:** `http://nvdh.dev/spice` (will auto-redirect to HTTPS)
+Once the certificate shows **Active** status, your game will be available at the following URLs:
 
-**Root redirect:** Visiting `https://nvdh.dev/` will automatically redirect to `https://nvdh.dev/spice/`
+- **HTTPS**: `https://nvdh.dev/spice`
+- **HTTP**: `http://nvdh.dev/spice` (will auto-redirect to HTTPS)
+
+**Root redirect**: Visiting `https://nvdh.dev/` will automatically redirect to `https://nvdh.dev/spice/`
 
 ## Verification
+
+To verify your deployment, run the following commands:
 
 ```bash
 # Test HTTP (will redirect to HTTPS once cert is active)
@@ -126,26 +137,37 @@ curl https://nvdh.dev/spice/img/1x-fremen.png
 
 ## Troubleshooting
 
+This section helps you diagnose and resolve common issues.
+
 ### Getting 404 on /spice path
+
+If you receive 404 errors on the `/spice` path, check the following:
 - Make sure you rebuilt and pushed the Docker image with the new `nginx.conf`
 - Verify deployment is using the latest image: `kubectl describe pod -l app=spice-runner`
 
 ### Certificate stuck on "Provisioning"
+
+If the certificate is stuck in Provisioning state, try the following:
 - Verify DNS: `dig nvdh.dev` should show your static IP
 - Wait longer (can take up to 20 minutes)
 - Check the certificate events: `kubectl describe managedcertificate spice-runner-cert`
 
-### Images/scripts not loading
+### Images or scripts not loading
+
+If images or scripts aren't loading, check the following:
 - Check browser console for 404 errors
 - Verify paths in nginx.conf are correct
 - Check if trailing slash matters: try both `nvdh.dev/spice` and `nvdh.dev/spice/`
 
 ### "FailedNotVisible" certificate error
+
+If you receive a "FailedNotVisible" error, take the following actions:
+
 1. Verify DNS A record points to the correct static IP
 2. Wait for DNS to propagate (30-60 minutes)
 3. Test that `http://nvdh.dev` is accessible (even if showing wrong content)
 
-## Current Configuration Summary
+## Current configuration summary
 
 - **Domain:** nvdh.dev
 - **Path:** /spice
@@ -162,9 +184,9 @@ curl https://nvdh.dev/spice/img/1x-fremen.png
 - **SSL Certificate:** FREE
 - **Total Networking:** ~$25/month
 
-## Adding Other Services
+## Adding other services
 
-If you want to host other services on nvdh.dev, you can add more paths to the ingress:
+If you want to host other services on nvdh.dev, you can add more paths to the ingress. Use the following configuration as an example:
 
 ```yaml
 # In k8s/ingress.yaml
