@@ -18,8 +18,11 @@
 
   try {
     // Initialize Faro with correct configuration
+    const faroUrl = window.location.origin + '/alloy/collect';
+    console.log('🔧 Initializing Faro with URL:', faroUrl);
+    
     const faro = window.GrafanaFaroWebSdk.initializeFaro({
-      url: window.location.origin + '/alloy/collect',
+      url: faroUrl,
       app: {
         name: 'spice-runner',
         version: '1.0.0',
@@ -35,8 +38,10 @@
     window.gameSessionId = Date.now().toString();
 
     console.log('✅ Grafana Faro initialized successfully');
-    console.log('📊 Sending telemetry to:', window.location.origin + '/alloy/collect');
+    console.log('📊 Sending telemetry to:', faroUrl);
     console.log('🔑 Session ID:', window.gameSessionId);
+    console.log('🌐 User Agent:', navigator.userAgent);
+    console.log('📱 Screen:', `${window.screen.width}x${window.screen.height}`);
 
     // Defensive check: Verify sessionId was created
     if (!window.gameSessionId) {
@@ -44,15 +49,18 @@
     }
 
     // Push initial event to confirm Faro is working
+    console.log('📤 Pushing initial game_loaded event...');
     faro.api.pushEvent('game_loaded', {
       sessionId: window.gameSessionId,
       timestamp: Date.now(),
       userAgent: navigator.userAgent,
       screenResolution: `${window.screen.width}x${window.screen.height}`
     });
+    console.log('✅ Initial event pushed');
 
   } catch (error) {
     console.error('❌ Failed to initialize Faro:', error);
+    console.error('❌ Error details:', error.message, error.stack);
   }
 })();
 
