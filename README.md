@@ -175,25 +175,19 @@ After you deploy the application, you can access the following services:
 - **Grafana**: Port-forward or expose via ingress
 - **Prometheus**: `http://prometheus.observability.svc.cluster.local:9090`
 
-## Cost optimization
+## Cost Optimization
 
-You can optimize costs using different strategies depending on whether you use Karpenter.
+GKE Cluster Autoscaler helps optimize costs automatically:
 
-### With Karpenter
+- **Automatic scaling**: Adds nodes only when needed, removes when idle
+- **Resource efficiency**: Right-sizes the cluster based on actual demand  
+- **Cost savings**: Reduces waste by scaling down during low traffic
+- **Configuration**: Adjust `--min-nodes` and `--max-nodes` to control costs
 
-Karpenter provides the following cost optimization capabilities:
-
-- **Spot instances**: Up to 80% savings on compute costs
-- **Node consolidation**: Removes underutilized nodes automatically
-- **Right-sizing**: Provisions appropriately-sized nodes for workloads
-
-### Without Karpenter
-
-If you don't use Karpenter, consider these alternatives:
-
-- Use GKE Cluster Autoscaler for basic node scaling
-- Configure appropriate node pool sizes based on workload
-- Set resource requests and limits carefully to optimize bin packing
+To further optimize:
+- Set appropriate resource requests and limits on pods
+- Use preemptible/spot node pools for non-critical workloads
+- Monitor usage and adjust autoscaling parameters
 
 ## Troubleshooting
 
