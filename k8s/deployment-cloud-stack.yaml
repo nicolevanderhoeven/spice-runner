@@ -7,7 +7,7 @@ metadata:
     app: spice-runner
     component: frontend
 spec:
-  replicas: 2
+  # replicas managed by HPA (see k8s/hpa.yaml)
   selector:
     matchLabels:
       app: spice-runner
@@ -44,7 +44,7 @@ spec:
         resources:
           requests:
             memory: "64Mi"
-            cpu: "100m"
+            cpu: "20m"  # Lowered for easier HPA demo (70% = 14m trigger point)
           limits:
             memory: "128Mi"
             cpu: "200m"
@@ -159,16 +159,17 @@ data:
     
     // Process Faro logs to add proper labels
     loki.process "faro_logs" {
-      stage.json {
-        expressions = {
+      stage.logfmt {
+        mapping = {
           kind = "kind",
-          name = "name",
+          event_name = "event_name",
         }
       }
       
       stage.labels {
         values = {
           kind = "kind",
+          event_name = "event_name",
         }
       }
       
