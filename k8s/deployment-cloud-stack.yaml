@@ -180,6 +180,11 @@ data:
         mapping = {
           kind = "kind",
           event_name = "event_name",
+          event_data_sessionId = "event_data_sessionId",
+          event_data_finalScore = "event_data_finalScore",
+          event_data_score = "event_data_score",
+          event_data_timestamp = "event_data_timestamp",
+          event_data_inputType = "event_data_inputType",
         }
       }
       
