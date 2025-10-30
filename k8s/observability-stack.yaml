@@ -1198,11 +1198,174 @@ data:
           }
         },
         {
+          "id": 24,
+          "title": "⚠️ Pending Pods (Unschedulable)",
+          "type": "stat",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 4},
+          "targets": [
+            {
+              "expr": "sum(kube_pod_status_phase{phase=\"Pending\"})",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "green"},
+                  {"value": 1, "color": "orange"},
+                  {"value": 3, "color": "red"}
+                ]
+              },
+              "unit": "short",
+              "mappings": [
+                {
+                  "type": "special",
+                  "options": {
+                    "match": "null",
+                    "result": {"text": "0"}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 25,
+          "title": "📊 Cluster CPU Capacity Used %",
+          "type": "gauge",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 4},
+          "targets": [
+            {
+              "expr": "(sum(kube_pod_container_resource_requests{resource=\"cpu\"}) / sum(kube_node_status_allocatable{resource=\"cpu\"})) * 100",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showThresholdLabels": true,
+            "showThresholdMarkers": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "green"},
+                  {"value": 70, "color": "yellow"},
+                  {"value": 85, "color": "orange"},
+                  {"value": 95, "color": "red"}
+                ]
+              },
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "decimals": 1
+            }
+          }
+        },
+        {
+          "id": 26,
+          "title": "📊 Cluster Memory Capacity Used %",
+          "type": "gauge",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 4},
+          "targets": [
+            {
+              "expr": "(sum(kube_pod_container_resource_requests{resource=\"memory\"}) / sum(kube_node_status_allocatable{resource=\"memory\"})) * 100",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showThresholdLabels": true,
+            "showThresholdMarkers": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "green"},
+                  {"value": 70, "color": "yellow"},
+                  {"value": 85, "color": "orange"},
+                  {"value": 95, "color": "red"}
+                ]
+              },
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "decimals": 1
+            }
+          }
+        },
+        {
+          "id": 27,
+          "title": "📈 Allocatable Resources per Node",
+          "type": "table",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 4},
+          "targets": [
+            {
+              "expr": "kube_node_status_allocatable{resource=\"cpu\"}",
+              "refId": "A",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "expr": "kube_node_status_allocatable{resource=\"memory\"}",
+              "refId": "B",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge"
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "node": "Node",
+                  "resource": "Resource",
+                  "Value": "Allocatable",
+                  "unit": "Unit"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "displayMode": "auto"
+              }
+            }
+          }
+        },
+        {
           "id": 18,
           "title": "Number of Spice Runner Pods over Time",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
           "targets": [
             {
               "expr": "sum(kube_pod_status_phase{pod=~\"spice-runner.*\", phase=\"Running\"})",
@@ -1242,7 +1405,7 @@ data:
           "title": "Cluster CPU Usage",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
           "targets": [
             {
               "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[5m])) by (node)",
@@ -1268,7 +1431,7 @@ data:
           "title": "Cluster Memory Usage",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
           "targets": [
             {
               "expr": "sum(container_memory_working_set_bytes{container!=\"\"}) by (node)",
@@ -1294,7 +1457,7 @@ data:
           "title": "CPU Usage by Namespace",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
           "targets": [
             {
               "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[5m])) by (namespace)",
@@ -1319,7 +1482,7 @@ data:
           "title": "Memory Usage by Namespace",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
           "targets": [
             {
               "expr": "sum(container_memory_working_set_bytes{container!=\"\"}) by (namespace)",
@@ -1344,7 +1507,7 @@ data:
           "title": "Pod Status by Namespace",
           "type": "table",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
           "targets": [
             {
               "expr": "sum(kube_pod_status_phase) by (namespace, phase)",
@@ -1384,7 +1547,7 @@ data:
           "title": "Node Status",
           "type": "table",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
           "targets": [
             {
               "expr": "kube_node_info",
@@ -1428,7 +1591,7 @@ data:
           "title": "Deployments",
           "type": "stat",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 36},
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 40},
           "targets": [
             {
               "expr": "count(kube_deployment_created)",
@@ -1452,7 +1615,7 @@ data:
           "title": "StatefulSets",
           "type": "stat",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 36},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 40},
           "targets": [
             {
               "expr": "count(kube_statefulset_created)",
@@ -1476,7 +1639,7 @@ data:
           "title": "DaemonSets",
           "type": "stat",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 36},
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 40},
           "targets": [
             {
               "expr": "count(kube_daemonset_created)",
@@ -1500,7 +1663,7 @@ data:
           "title": "Services",
           "type": "stat",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 36},
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 40},
           "targets": [
             {
               "expr": "count(kube_service_info)",
@@ -1520,11 +1683,155 @@ data:
           }
         },
         {
+          "id": 28,
+          "title": "⏱️ Pending Pods Over Time",
+          "type": "timeseries",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 44},
+          "targets": [
+            {
+              "expr": "sum(kube_pod_status_phase{phase=\"Pending\"})",
+              "refId": "A",
+              "legendFormat": "Pending Pods"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 30,
+                "showPoints": "auto",
+                "spanNulls": false
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "green"},
+                  {"value": 1, "color": "orange"},
+                  {"value": 3, "color": "red"}
+                ]
+              },
+              "unit": "short",
+              "min": 0
+            }
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": ["last", "max"]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          }
+        },
+        {
+          "id": 29,
+          "title": "📋 Node Resource Capacity Details",
+          "type": "table",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 44},
+          "targets": [
+            {
+              "expr": "kube_node_status_allocatable{resource=\"cpu\"}",
+              "refId": "A",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "expr": "sum(kube_pod_container_resource_requests{resource=\"cpu\"}) by (node)",
+              "refId": "B",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "expr": "kube_node_status_allocatable{resource=\"memory\"}",
+              "refId": "C",
+              "format": "table",
+              "instant": true
+            },
+            {
+              "expr": "sum(kube_pod_container_resource_requests{resource=\"memory\"}) by (node)",
+              "refId": "D",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge"
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true,
+                  "unit": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "node": "Node",
+                  "Value #A": "CPU Allocatable",
+                  "Value #B": "CPU Requested",
+                  "Value #C": "Memory Allocatable",
+                  "Value #D": "Memory Requested"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "displayMode": "auto"
+              },
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "green"}
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "CPU % Used"},
+                "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {"value": 0, "color": "green"},
+                        {"value": 70, "color": "yellow"},
+                        {"value": 85, "color": "orange"},
+                        {"value": 95, "color": "red"}
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
           "id": 15,
           "title": "Network I/O by Pod",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40},
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 52},
           "targets": [
             {
               "expr": "sum(rate(container_network_receive_bytes_total[5m])) by (pod)",
@@ -1554,7 +1861,7 @@ data:
           "title": "Persistent Volume Claims",
           "type": "table",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 48},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 60},
           "targets": [
             {
               "expr": "kube_persistentvolumeclaim_info",
@@ -1597,7 +1904,7 @@ data:
           "title": "Container Restarts",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 48},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 60},
           "targets": [
             {
               "expr": "sum(increase(kube_pod_container_status_restarts_total[1h])) by (namespace, pod)",
@@ -1622,7 +1929,7 @@ data:
           "title": "HPA-Managed Replica Count (via KEDA)",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 56},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 68},
           "targets": [
             {
               "expr": "kube_horizontalpodautoscaler_status_desired_replicas{horizontalpodautoscaler=~\".*keda.*\"}",
@@ -1675,7 +1982,7 @@ data:
           "title": "HPA Status (KEDA-Managed)",
           "type": "table",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 56},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 68},
           "targets": [
             {
               "expr": "kube_horizontalpodautoscaler_status_condition{horizontalpodautoscaler=~\".*keda.*\"}",
@@ -1727,7 +2034,7 @@ data:
           "title": "KEDA/Autoscaling Events (Logs)",
           "type": "logs",
           "datasource": {"type": "loki", "uid": "loki"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 64},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 76},
           "targets": [
             {
               "expr": "{namespace=~\"default|keda\"} |~ \"(?i)keda|scaledobject|scaled|scaler\"",
@@ -1750,7 +2057,7 @@ data:
           "title": "HPA Scaling Decisions",
           "type": "logs",
           "datasource": {"type": "loki", "uid": "loki"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 64},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 76},
           "targets": [
             {
               "expr": "{namespace=\"kube-system\", app=~\".*controller.*\"} |~ \"(?i)horizontalpodautoscaler|hpa|scaled|replica\"",
@@ -1772,7 +2079,7 @@ data:
           "id": 23,
           "title": "HPA Events Timeline (Note: Kubernetes Events not in Loki by default)",
           "type": "text",
-          "gridPos": {"h": 4, "w": 24, "x": 0, "y": 72},
+          "gridPos": {"h": 4, "w": 24, "x": 0, "y": 84},
           "options": {
             "mode": "markdown",
             "content": "## Viewing HPA Scaling Events\n\n**Kubernetes Events are not automatically sent to Loki.** To see HPA scaling decisions:\n\n### Via kubectl:\n```bash\n# View HPA events\nkubectl describe hpa keda-hpa-spice-runner-keda -n default | tail -20\n\n# Watch real-time events\nkubectl get events -n default --watch | grep -i hpa\n\n# Recent HPA events\nkubectl get events -n default --sort-by='.lastTimestamp' | grep -i horizontal\n```\n\n### Example HPA Events:\n- `SuccessfulRescale`: New size: 2; reason: cpu resource utilization above target\n- `HpaProfilePerformance`: The HPA rescaled target based on performance profile\n- `FailedGetResourceMetric`: Unable to get metrics\n\n### To send Events to Loki (optional):\nInstall [kubernetes-event-exporter](https://github.com/resmoio/kubernetes-event-exporter) or similar tool."
