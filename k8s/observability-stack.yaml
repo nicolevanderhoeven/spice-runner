@@ -1197,9 +1197,9 @@ data:
           "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
           "targets": [
             {
-              "expr": "count(kube_pod_info{pod=~\"spice-runner.*\"})",
+              "expr": "sum(kube_pod_status_phase{pod=~\"spice-runner.*\", phase=\"Running\"})",
               "refId": "A",
-              "legendFormat": "Total Pods"
+              "legendFormat": "Running Pods"
             }
           ],
           "fieldConfig": {
