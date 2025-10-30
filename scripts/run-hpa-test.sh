@@ -1,5 +1,6 @@
 #!/bin/bash
-# Wrapper script to run k6 HPA tests with monitoring
+# Wrapper script to run k6 autoscaling tests with monitoring
+# Supports both HPA and KEDA
 
 set -e
 
@@ -13,11 +14,13 @@ NC='\033[0m'
 # Configuration
 NAMESPACE="${NAMESPACE:-default}"
 HPA_NAME="spice-runner-hpa"
+KEDA_NAME="spice-runner-keda"
 SERVICE_URL="${SERVICE_URL:-}"
 TEST_TYPE="${1:-standard}"
+AUTOSCALER_TYPE=""
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}Spice Runner HPA Load Test${NC}"
+echo -e "${BLUE}Spice Runner Autoscaling Load Test${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
@@ -44,10 +47,26 @@ if ! command -v kubectl &> /dev/null; then
     exit 1
 fi
 
-# Check HPA exists
-echo -e "${GREEN}Checking HPA status...${NC}"
-if ! kubectl get hpa $HPA_NAME -n $NAMESPACE &> /dev/null; then
-    echo -e "${RED}Error: HPA '$HPA_NAME' not found in namespace '$NAMESPACE'${NC}"
+# Detect which autoscaler is being used
+echo -e "${GREEN}Detecting autoscaler...${NC}"
+if kubectl get scaledobject $KEDA_NAME -n $NAMESPACE &> /dev/null; then
+    AUTOSCALER_TYPE="KEDA"
+    echo -e "${GREEN}✓ KEDA ScaledObject found: $KEDA_NAME${NC}"
+    
+    # Check if KEDA created HPA
+    KEDA_HPA=$(kubectl get hpa -n $NAMESPACE -o name 2>/dev/null | grep keda || echo "")
+    if [ -n "$KEDA_HPA" ]; then
+        echo -e "${GREEN}✓ KEDA-managed HPA found${NC}"
+    fi
+elif kubectl get hpa $HPA_NAME -n $NAMESPACE &> /dev/null; then
+    AUTOSCALER_TYPE="HPA"
+    echo -e "${GREEN}✓ HPA found: $HPA_NAME${NC}"
+else
+    echo -e "${RED}Error: No autoscaler found${NC}"
+    echo ""
+    echo "Please install either:"
+    echo "  • KEDA: ./scripts/install-keda.sh"
+    echo "  • HPA:  kubectl apply -f k8s/hpa.yaml${NC}"
     echo ""
     echo "Apply HPA first:"
     echo "  kubectl apply -f k8s/hpa.yaml"
@@ -97,36 +116,53 @@ kubectl get pods -n $NAMESPACE -l app=spice-runner
 echo ""
 
 # Start monitoring in background
-echo -e "${GREEN}Starting HPA monitoring in background...${NC}"
+echo -e "${GREEN}Starting autoscaling monitoring in background...${NC}"
 (
     while true; do
         clear
-        echo -e "${BLUE}=== Real-time HPA Monitoring ===${NC}"
+        echo -e "${BLUE}=== Real-time Autoscaling Monitoring ($AUTOSCALER_TYPE) ===${NC}"
         echo ""
         date
         echo ""
         
-        echo -e "${YELLOW}HPA Status:${NC}"
-        kubectl get hpa $HPA_NAME -n $NAMESPACE 2>/dev/null || echo "HPA not found"
-        echo ""
+        if [ "$AUTOSCALER_TYPE" = "KEDA" ]; then
+            echo -e "${YELLOW}KEDA ScaledObject Status:${NC}"
+            kubectl get scaledobject $KEDA_NAME -n $NAMESPACE 2>/dev/null || echo "ScaledObject not found"
+            echo ""
+            
+            echo -e "${YELLOW}KEDA-managed HPA Status:${NC}"
+            kubectl get hpa -n $NAMESPACE 2>/dev/null | grep keda || echo "KEDA HPA not created yet (will appear when scaling is active)"
+            echo ""
+        else
+            echo -e "${YELLOW}HPA Status:${NC}"
+            kubectl get hpa $HPA_NAME -n $NAMESPACE 2>/dev/null || echo "HPA not found"
+            echo ""
+        fi
         
         echo -e "${YELLOW}Running Pods:${NC}"
-        kubectl get pods -n $NAMESPACE -l app=spice-runner --no-headers | wc -l | xargs echo "Pod count:"
-        kubectl get pods -n $NAMESPACE -l app=spice-runner
+        POD_COUNT=$(kubectl get pods -n $NAMESPACE -l app=spice-runner --no-headers 2>/dev/null | wc -l | xargs)
+        echo "Pod count: $POD_COUNT"
+        if [ "$POD_COUNT" -eq 0 ]; then
+            echo -e "${YELLOW}⚠ Scaled to ZERO - no pods running (KEDA feature)${NC}"
+        else
+            kubectl get pods -n $NAMESPACE -l app=spice-runner
+        fi
         echo ""
         
-        echo -e "${YELLOW}Resource Usage:${NC}"
-        kubectl top pods -n $NAMESPACE -l app=spice-runner 2>/dev/null || echo "Metrics not available yet"
-        echo ""
+        if [ "$POD_COUNT" -gt 0 ]; then
+            echo -e "${YELLOW}Resource Usage:${NC}"
+            kubectl top pods -n $NAMESPACE -l app=spice-runner 2>/dev/null || echo "Metrics not available yet"
+            echo ""
+        fi
         
         echo -e "${YELLOW}Recent Events:${NC}"
-        kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp' | grep -i "spice-runner\|hpa" | tail -5 || echo "No events"
+        kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp' | grep -i "spice-runner\|hpa\|keda\|scaled" | tail -5 || echo "No events"
         echo ""
         
         echo -e "${BLUE}Press Ctrl+C in the other terminal to stop load test${NC}"
         sleep 10
     done
-) > /tmp/hpa-monitor.log 2>&1 &
+) > /tmp/autoscaler-monitor.log 2>&1 &
 MONITOR_PID=$!
 
 # Give monitoring a moment to start
@@ -135,10 +171,10 @@ sleep 2
 # Open monitoring in new terminal if possible
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
-    osascript -e 'tell app "Terminal" to do script "tail -f /tmp/hpa-monitor.log"' 2>/dev/null || echo "Could not open monitoring window"
+    osascript -e 'tell app "Terminal" to do script "tail -f /tmp/autoscaler-monitor.log"' 2>/dev/null || echo "Could not open monitoring window"
 elif command -v gnome-terminal &> /dev/null; then
     # Linux with GNOME
-    gnome-terminal -- bash -c "tail -f /tmp/hpa-monitor.log; exec bash" 2>/dev/null || echo "Could not open monitoring window"
+    gnome-terminal -- bash -c "tail -f /tmp/autoscaler-monitor.log; exec bash" 2>/dev/null || echo "Could not open monitoring window"
 fi
 
 echo ""
@@ -185,26 +221,64 @@ echo -e "${BLUE}========================================${NC}"
 echo ""
 
 # Show final state
-echo -e "${YELLOW}Final HPA status:${NC}"
-kubectl get hpa $HPA_NAME -n $NAMESPACE
-echo ""
-
-echo -e "${YELLOW}Final pod count:${NC}"
-kubectl get pods -n $NAMESPACE -l app=spice-runner
-echo ""
-
-echo -e "${YELLOW}HPA Events:${NC}"
-kubectl describe hpa $HPA_NAME -n $NAMESPACE | grep -A 20 "Events:" || echo "No events"
-echo ""
+if [ "$AUTOSCALER_TYPE" = "KEDA" ]; then
+    echo -e "${YELLOW}Final KEDA ScaledObject status:${NC}"
+    kubectl get scaledobject $KEDA_NAME -n $NAMESPACE
+    echo ""
+    
+    echo -e "${YELLOW}KEDA-managed HPA:${NC}"
+    kubectl get hpa -n $NAMESPACE | grep keda || echo "HPA not found"
+    echo ""
+    
+    echo -e "${YELLOW}Final pod count:${NC}"
+    POD_COUNT=$(kubectl get pods -n $NAMESPACE -l app=spice-runner --no-headers 2>/dev/null | wc -l | xargs)
+    if [ "$POD_COUNT" -eq 0 ]; then
+        echo -e "${GREEN}✓ Scaled to ZERO - no pods running (cost savings!)${NC}"
+    else
+        kubectl get pods -n $NAMESPACE -l app=spice-runner
+    fi
+    echo ""
+    
+    echo -e "${YELLOW}KEDA Events:${NC}"
+    kubectl describe scaledobject $KEDA_NAME -n $NAMESPACE | grep -A 20 "Events:" || echo "No events"
+    echo ""
+else
+    echo -e "${YELLOW}Final HPA status:${NC}"
+    kubectl get hpa $HPA_NAME -n $NAMESPACE
+    echo ""
+    
+    echo -e "${YELLOW}Final pod count:${NC}"
+    kubectl get pods -n $NAMESPACE -l app=spice-runner
+    echo ""
+    
+    echo -e "${YELLOW}HPA Events:${NC}"
+    kubectl describe hpa $HPA_NAME -n $NAMESPACE | grep -A 20 "Events:" || echo "No events"
+    echo ""
+fi
 
 echo -e "${GREEN}Next steps:${NC}"
-echo "1. Monitor scale-down (takes ~5 minutes):"
-echo "   watch kubectl get pods -n $NAMESPACE -l app=spice-runner"
-echo ""
-echo "2. View detailed results:"
-echo "   cat /tmp/k6-results.json | jq ."
-echo ""
-echo "3. Check Grafana dashboard:"
+if [ "$AUTOSCALER_TYPE" = "KEDA" ]; then
+    echo "1. Monitor ScaledObject: watch kubectl get scaledobject $KEDA_NAME -n $NAMESPACE"
+    echo ""
+    echo "2. Wait 5+ minutes to observe scale-down (possibly to ZERO):"
+    echo "   watch kubectl get pods -n $NAMESPACE -l app=spice-runner"
+    echo ""
+    echo "3. View k6 results: cat /tmp/k6-results.json | jq '.metrics'"
+    echo ""
+    echo "4. View KEDA logs:"
+    echo "   kubectl logs -n keda -l app.kubernetes.io/name=keda-operator --tail=50"
+    echo ""
+    echo "5. Check Grafana dashboard:"
+else
+    echo "1. Monitor HPA: watch kubectl get hpa $HPA_NAME -n $NAMESPACE"
+    echo ""
+    echo "2. Wait 5+ minutes to observe scale-down:"
+    echo "   watch kubectl get pods -n $NAMESPACE -l app=spice-runner"
+    echo ""
+    echo "3. View k6 results: cat /tmp/k6-results.json | jq '.metrics'"
+    echo ""
+    echo "4. Check Grafana dashboard:"
+fi
 echo "   kubectl get svc grafana -n observability"
 echo ""
 

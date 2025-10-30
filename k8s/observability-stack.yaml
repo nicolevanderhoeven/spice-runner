@@ -172,6 +172,14 @@ data:
         static_configs:
           - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
       
+      - job_name: 'keda-operator'
+        static_configs:
+          - targets: ['keda-operator.keda.svc.cluster.local:9666']
+      
+      - job_name: 'keda-metrics-apiserver'
+        static_configs:
+          - targets: ['keda-operator-metrics-apiserver.keda.svc.cluster.local:9022']
+      
       - job_name: 'kubernetes-nodes'
         kubernetes_sd_configs:
           - role: node
@@ -1607,6 +1615,167 @@ data:
               },
               "unit": "short"
             }
+          }
+        },
+        {
+          "id": 19,
+          "title": "HPA-Managed Replica Count (via KEDA)",
+          "type": "timeseries",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 56},
+          "targets": [
+            {
+              "expr": "kube_horizontalpodautoscaler_status_desired_replicas{horizontalpodautoscaler=~\".*keda.*\"}",
+              "refId": "A",
+              "legendFormat": "Desired - {{horizontalpodautoscaler}}"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=~\".*keda.*\"}",
+              "refId": "B",
+              "legendFormat": "Current - {{horizontalpodautoscaler}}"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_spec_min_replicas{horizontalpodautoscaler=~\".*keda.*\"}",
+              "refId": "C",
+              "legendFormat": "Min - {{horizontalpodautoscaler}}"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=~\".*keda.*\"}",
+              "refId": "D",
+              "legendFormat": "Max - {{horizontalpodautoscaler}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 10,
+                "showPoints": "auto"
+              },
+              "unit": "short",
+              "min": 0
+            }
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": ["last", "min", "max"]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          }
+        },
+        {
+          "id": 20,
+          "title": "HPA Status (KEDA-Managed)",
+          "type": "table",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 56},
+          "targets": [
+            {
+              "expr": "kube_horizontalpodautoscaler_status_condition{horizontalpodautoscaler=~\".*keda.*\"}",
+              "refId": "A",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "instance": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "horizontalpodautoscaler": "HPA Name",
+                  "namespace": "Namespace",
+                  "condition": "Condition",
+                  "status": "Status",
+                  "Value": "Value"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "red"},
+                  {"value": 1, "color": "green"}
+                ]
+              },
+              "custom": {
+                "align": "auto",
+                "displayMode": "auto"
+              }
+            }
+          }
+        },
+        {
+          "id": 21,
+          "title": "KEDA/Autoscaling Events (Logs)",
+          "type": "logs",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 64},
+          "targets": [
+            {
+              "expr": "{namespace=~\"default|keda\"} |~ \"(?i)keda|scaledobject|scaled|scaler\"",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": false,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
+        },
+        {
+          "id": 22,
+          "title": "HPA Scaling Decisions",
+          "type": "logs",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 64},
+          "targets": [
+            {
+              "expr": "{namespace=\"kube-system\", app=~\".*controller.*\"} |~ \"(?i)horizontalpodautoscaler|hpa|scaled|replica\"",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": false,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
+        },
+        {
+          "id": 23,
+          "title": "HPA Events Timeline (Note: Kubernetes Events not in Loki by default)",
+          "type": "text",
+          "gridPos": {"h": 4, "w": 24, "x": 0, "y": 72},
+          "options": {
+            "mode": "markdown",
+            "content": "## Viewing HPA Scaling Events\n\n**Kubernetes Events are not automatically sent to Loki.** To see HPA scaling decisions:\n\n### Via kubectl:\n```bash\n# View HPA events\nkubectl describe hpa keda-hpa-spice-runner-keda -n default | tail -20\n\n# Watch real-time events\nkubectl get events -n default --watch | grep -i hpa\n\n# Recent HPA events\nkubectl get events -n default --sort-by='.lastTimestamp' | grep -i horizontal\n```\n\n### Example HPA Events:\n- `SuccessfulRescale`: New size: 2; reason: cpu resource utilization above target\n- `HpaProfilePerformance`: The HPA rescaled target based on performance profile\n- `FailedGetResourceMetric`: Unable to get metrics\n\n### To send Events to Loki (optional):\nInstall [kubernetes-event-exporter](https://github.com/resmoio/kubernetes-event-exporter) or similar tool."
           }
         }
       ]

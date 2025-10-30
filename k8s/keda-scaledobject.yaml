@@ -1,0 +1,80 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: spice-runner-keda
+  namespace: default
+  labels:
+    app: spice-runner
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: spice-runner
+  
+  # Scale from 1 to 10 pods
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  
+  # Polling and cooldown settings
+  pollingInterval: 15           # Check metrics every 15 seconds
+  cooldownPeriod: 300           # Wait 5 minutes before scaling to zero
+  
+  # Fallback configuration (if metrics are unavailable)
+  fallback:
+    failureThreshold: 3
+    replicas: 2                 # Fallback to 2 replicas if metrics fail
+  
+  triggers:
+  # ============================================================================
+  # Trigger 1: HTTP Request Rate (Primary - Event-Driven Scaling)
+  # ============================================================================
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus.observability.svc.cluster.local:9090
+      metricName: http_requests_per_second
+      query: |
+        sum(rate(nginx_http_requests_total{service="spice-runner-nginx"}[1m])) or vector(0)
+      threshold: '50'           # Scale up when > 50 requests/second
+      activationThreshold: '1'  # Wake from zero at >= 1 request/second
+      ignoreNullValues: 'true'  # Don't scale down if query returns null
+  
+  # ============================================================================
+  # Trigger 2: CPU Utilization (Resource-Based Scaling)
+  # ============================================================================
+  - type: cpu
+    metricType: Utilization     # Use percentage utilization
+    metadata:
+      value: '80'               # Scale up when average CPU > 80%
+  
+  # ============================================================================
+  # Trigger 3: Memory Utilization (Resource-Based Scaling)
+  # ============================================================================
+  - type: memory
+    metricType: Utilization     # Use percentage utilization
+    metadata:
+      value: '75'               # Scale up when average memory > 75%
+
+---
+# Optional: ScaledObject for more aggressive traffic-based scaling
+# Uncomment this if you want separate scaling behavior for high-traffic scenarios
+#
+# apiVersion: keda.sh/v1alpha1
+# kind: ScaledObject
+# metadata:
+#   name: spice-runner-keda-aggressive
+#   namespace: default
+# spec:
+#   scaleTargetRef:
+#     name: spice-runner
+#   minReplicaCount: 2
+#   maxReplicaCount: 20
+#   pollingInterval: 10
+#   cooldownPeriod: 60
+#   triggers:
+#   - type: prometheus
+#     metadata:
+#       serverAddress: http://prometheus.observability.svc.cluster.local:9090
+#       query: |
+#         sum(rate(nginx_http_requests_total{service="spice-runner-nginx"}[1m]))
+#       threshold: '200'        # Higher threshold for burst scaling
+
