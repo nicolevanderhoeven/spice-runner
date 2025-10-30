@@ -25,7 +25,6 @@ kubectl create namespace observability --dry-run=client -o yaml | kubectl apply 
 
 # Deploy observability stack
 kubectl apply -f k8s/observability-stack.yaml
-kubectl apply -f k8s/grafana-dashboard-configmap.yaml
 
 echo -e "${GREEN}✓${NC} Observability stack deployed"
 echo ""
