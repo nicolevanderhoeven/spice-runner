@@ -87,16 +87,21 @@
       return runner.distanceRan ? Math.floor(runner.distanceRan / 10) : 0;
     }
 
-    // Track player jumps
+    // Track player jumps (keyboard and touch events)
     const originalOnKeyDown = window.Runner.prototype.onKeyDown;
     window.Runner.prototype.onKeyDown = function(e) {
       const result = originalOnKeyDown.apply(this, arguments);
       
-      if (e.keyCode === 38 || e.keyCode === 32) { // Up arrow or Space
+      // Check for jump action: keyboard keys (Up arrow or Space) OR touch event
+      const isJumpKey = e.keyCode === 38 || e.keyCode === 32;
+      const isTouchJump = e.type === 'touchstart';
+      
+      if (isJumpKey || isTouchJump) {
         safePushEvent('player_jump', {
           sessionId: currentSessionId,
           score: getDisplayedScore(this),
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          inputType: isTouchJump ? 'touch' : 'keyboard'
         });
       }
 
