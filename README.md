@@ -235,7 +235,7 @@ This is a demo project for showcasing autoscaling capabilities. You can contribu
 - Testing different autoscaling configurations
 - Adding new game features
 - Improving observability dashboards
-- Sharing findings from Karpenter testing
+- Sharing your autoscaling experiences
 
 ## License
 
