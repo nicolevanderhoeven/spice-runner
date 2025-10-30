@@ -910,7 +910,7 @@ data:
           "gridPos": {"h": 4, "w": 6, "x": 12, "y": 24},
           "targets": [
             {
-              "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_session_start\" [24h]))",
+              "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_start\" [24h]))",
               "refId": "A"
             }
           ],
@@ -1019,7 +1019,7 @@ data:
           "gridPos": {"h": 10, "w": 24, "x": 0, "y": 36},
           "targets": [
             {
-              "expr": "{job=\"faro\"} | logfmt | kind=\"event\" | event_name=~\"player_jump|game_collision|game_over|high_score\"",
+              "expr": "{job=\"faro\"} | logfmt | kind=\"event\" | event_name=~\"game_start|player_jump|game_collision|game_over|high_score\"",
               "refId": "A"
             }
           ],
@@ -1197,9 +1197,9 @@ data:
           "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
           "targets": [
             {
-              "expr": "kube_pod_info{pod=~\"spice-runner.*\"}",
+              "expr": "count(kube_pod_info{pod=~\"spice-runner.*\"})",
               "refId": "A",
-              "legendFormat": "{{pod}}"
+              "legendFormat": "Total Pods"
             }
           ],
           "fieldConfig": {
@@ -1211,12 +1211,10 @@ data:
                 "lineWidth": 2,
                 "fillOpacity": 20,
                 "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {"mode": "normal"}
+                "spanNulls": false
               },
               "unit": "short",
-              "min": 0,
-              "max": 1
+              "min": 0
             }
           },
           "options": {
