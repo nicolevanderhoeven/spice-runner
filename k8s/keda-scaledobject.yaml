@@ -11,13 +11,13 @@ spec:
     kind: Deployment
     name: spice-runner
   
-  # Scale from 1 to 10 pods
+  # Scale from 1 to 150 pods (DEMO MODE - will trigger massive node scaling!)
   minReplicaCount: 1
-  maxReplicaCount: 10
+  maxReplicaCount: 150
   
   # Polling and cooldown settings
-  pollingInterval: 15           # Check metrics every 15 seconds
-  cooldownPeriod: 300           # Wait 5 minutes before scaling to zero
+  pollingInterval: 10           # Check metrics every 10 seconds (faster response)
+  cooldownPeriod: 120           # Wait 2 minutes before scaling down (faster for demo)
   
   # Fallback configuration (if metrics are unavailable)
   fallback:
@@ -34,7 +34,7 @@ spec:
       metricName: http_requests_per_second
       query: |
         sum(rate(nginx_http_requests_total{service="spice-runner-nginx"}[1m])) or vector(0)
-      threshold: '50'           # Scale up when > 50 requests/second
+      threshold: '10'           # Scale up when > 10 requests/second (VERY aggressive for demo)
       activationThreshold: '1'  # Wake from zero at >= 1 request/second
       ignoreNullValues: 'true'  # Don't scale down if query returns null
   
@@ -44,7 +44,7 @@ spec:
   - type: cpu
     metricType: Utilization     # Use percentage utilization
     metadata:
-      value: '80'               # Scale up when average CPU > 80%
+      value: '30'               # Scale up when average CPU > 30% (VERY aggressive for demo)
   
   # ============================================================================
   # Trigger 3: Memory Utilization (Resource-Based Scaling)
@@ -52,7 +52,7 @@ spec:
   - type: memory
     metricType: Utilization     # Use percentage utilization
     metadata:
-      value: '75'               # Scale up when average memory > 75%
+      value: '80'               # Scale up when average memory > 80%
 
 ---
 # Optional: ScaledObject for more aggressive traffic-based scaling

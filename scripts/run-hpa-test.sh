@@ -54,9 +54,10 @@ if kubectl get scaledobject $KEDA_NAME -n $NAMESPACE &> /dev/null; then
     echo -e "${GREEN}✓ KEDA ScaledObject found: $KEDA_NAME${NC}"
     
     # Check if KEDA created HPA
-    KEDA_HPA=$(kubectl get hpa -n $NAMESPACE -o name 2>/dev/null | grep keda || echo "")
+    KEDA_HPA=$(kubectl get hpa -n $NAMESPACE -o name 2>/dev/null | grep keda | head -1 | cut -d'/' -f2 || echo "")
     if [ -n "$KEDA_HPA" ]; then
-        echo -e "${GREEN}✓ KEDA-managed HPA found${NC}"
+        HPA_NAME="$KEDA_HPA"
+        echo -e "${GREEN}✓ KEDA-managed HPA found: $HPA_NAME${NC}"
     fi
 elif kubectl get hpa $HPA_NAME -n $NAMESPACE &> /dev/null; then
     AUTOSCALER_TYPE="HPA"

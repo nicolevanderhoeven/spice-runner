@@ -44,10 +44,27 @@ spec:
         resources:
           requests:
             memory: "64Mi"
-            cpu: "30m"  # Increased for KEDA - allows 1 pod to handle idle load without hitting 80% threshold
+            cpu: "10m"  # Lowered to make CPU scaling more sensitive
           limits:
             memory: "128Mi"
             cpu: "200m"
+      
+      # Nginx Prometheus Exporter sidecar
+      - name: nginx-exporter
+        image: nginx/nginx-prometheus-exporter:1.1.0
+        args:
+          - -nginx.scrape-uri=http://localhost:80/nginx_status
+        ports:
+        - name: nginx-metrics
+          containerPort: 9113
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 32Mi
       
       # Alloy sidecar for observability
       - name: alloy
@@ -60,7 +77,7 @@ spec:
           - --server.http.listen-addr=0.0.0.0:12345
           - --stability.level=public-preview
         ports:
-        - name: http
+        - name: alloy-http
           containerPort: 12345
           protocol: TCP
         - name: otlp-grpc
@@ -390,6 +407,42 @@ data:
       endpoint {
         url = env("LOKI_URL")
       }
+    }
+    
+    // ============================================================================
+    // Nginx Metrics Collection (from nginx-exporter sidecar)
+    // ============================================================================
+    
+    prometheus.scrape "nginx" {
+      targets = [{
+        __address__ = "localhost:9113",
+      }]
+      forward_to = [prometheus.relabel.nginx.receiver]
+      scrape_interval = "10s"  // Scrape every 10 seconds for responsive autoscaling
+    }
+    
+    prometheus.relabel "nginx" {
+      rule {
+        target_label = "job"
+        replacement  = "nginx"
+      }
+      
+      rule {
+        target_label = "service"
+        replacement  = "spice-runner-nginx"
+      }
+      
+      rule {
+        target_label = "pod"
+        replacement  = env("POD_NAME")
+      }
+      
+      rule {
+        target_label = "namespace"
+        replacement  = env("KUBERNETES_NAMESPACE")
+      }
+      
+      forward_to = [prometheus.remote_write.default.receiver]
     }
     
     // ============================================================================
