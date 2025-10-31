@@ -185,6 +185,9 @@ data:
           event_data_score = "event_data_score",
           event_data_timestamp = "event_data_timestamp",
           event_data_inputType = "event_data_inputType",
+          browser_os = "browser_os",
+          browser_name = "browser_name",
+          browser_version = "browser_version",
         }
       }
       
@@ -192,6 +195,7 @@ data:
         values = {
           kind = "kind",
           event_name = "event_name",
+          browser_os = "browser_os",
         }
       }
       

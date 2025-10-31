@@ -1059,6 +1059,48 @@ data:
             "showLabels": true,
             "wrapLogMessage": false
           }
+        },
+        {
+          "id": 16,
+          "title": "🖥️ Browser OS Distribution",
+          "type": "piechart",
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 54},
+          "targets": [
+            {
+              "expr": "sum by (browser_os) (count_over_time({job=\"faro\"} | logfmt | browser_os != \"\" [$__range]))",
+              "refId": "A",
+              "legendFormat": "{{browser_os}}"
+            }
+          ],
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": ["value", "percent"]
+            },
+            "pieType": "pie",
+            "tooltip": {
+              "mode": "single"
+            },
+            "displayLabels": ["percent"]
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              }
+            }
+          }
         }
       ]
     }
