@@ -644,8 +644,21 @@ spec:
               key: admin-password
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "false"
+        - name: GF_SERVER_ROOT_URL
+          value: "http://34.60.65.9:3000"
+        - name: GF_SERVER_SERVE_FROM_SUB_PATH
+          value: "false"
         - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
           value: "/var/lib/grafana/dashboards/spice-runner-dashboard.json"
+        # Session configuration for longer login sessions
+        - name: GF_AUTH_LOGIN_COOKIE_NAME
+          value: "grafana_session"
+        - name: GF_AUTH_LOGIN_MAXIMUM_INACTIVE_LIFETIME_DURATION
+          value: "7d"  # Stay logged in for 7 days of inactivity
+        - name: GF_AUTH_LOGIN_MAXIMUM_LIFETIME_DURATION
+          value: "30d"  # Maximum session lifetime of 30 days
+        - name: GF_AUTH_TOKEN_ROTATION_INTERVAL_MINUTES
+          value: "10"  # Rotate token every 10 minutes for security
         volumeMounts:
         - name: datasources
           mountPath: /etc/grafana/provisioning/datasources
@@ -690,6 +703,10 @@ metadata:
     app: grafana
 spec:
   type: LoadBalancer  # Change to NodePort or ClusterIP if you prefer
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours
   ports:
   - port: 3000
     targetPort: 3000
