@@ -11,48 +11,43 @@ spec:
     kind: Deployment
     name: spice-runner
   
-  # Scale from 1 to 150 pods (DEMO MODE - will trigger massive node scaling!)
-  minReplicaCount: 1
-  maxReplicaCount: 150
+  # Scale from 0 to 200 pods (1:1 POD-PER-SESSION MODE!)
+  minReplicaCount: 0            # Scale to zero when no sessions
+  maxReplicaCount: 200          # Support up to 200 concurrent sessions
   
-  # Polling and cooldown settings
-  pollingInterval: 10           # Check metrics every 10 seconds (faster response)
-  cooldownPeriod: 120           # Wait 2 minutes before scaling down (faster for demo)
+  # Polling and cooldown settings  
+  pollingInterval: 5            # Check metrics every 5 seconds (very responsive!)
+  cooldownPeriod: 30            # Wait only 30 seconds before scaling down (fast demo cleanup)
   
   # Fallback configuration (if metrics are unavailable)
   fallback:
     failureThreshold: 3
-    replicas: 2                 # Fallback to 2 replicas if metrics fail
+    replicas: 1                 # Fallback to 1 replica if metrics fail
   
   triggers:
   # ============================================================================
-  # Trigger 1: HTTP Request Rate (Primary - Event-Driven Scaling)
+  # Trigger 1: HTTP Request Rate (1:1 Pod-Per-Session Approximation)
+  # Each active game session generates ~0.5-1 req/s from heartbeats and events
+  # By setting a very low threshold, we approximate 1 pod per active session
   # ============================================================================
   - type: prometheus
+    metricType: AverageValue    # Required for fallback configuration
     metadata:
       serverAddress: http://prometheus.observability.svc.cluster.local:9090
       metricName: http_requests_per_second
+      # Query total HTTP request rate
       query: |
-        sum(rate(nginx_http_requests_total{service="spice-runner-nginx"}[1m])) or vector(0)
-      threshold: '10'           # Scale up when > 10 requests/second (VERY aggressive for demo)
-      activationThreshold: '1'  # Wake from zero at >= 1 request/second
-      ignoreNullValues: 'true'  # Don't scale down if query returns null
+        sum(rate(nginx_http_requests_total{service="spice-runner-nginx"}[30s])) or vector(0)
+      threshold: '1'            # Scale 1 pod per 1 req/s (~1 pod per active session)
+      activationThreshold: '0.2' # Wake from zero at 0.2 req/s (any activity)
   
   # ============================================================================
-  # Trigger 2: CPU Utilization (Resource-Based Scaling)
+  # Trigger 2: CPU Safety Net (prevent overload)
   # ============================================================================
   - type: cpu
     metricType: Utilization     # Use percentage utilization
     metadata:
-      value: '30'               # Scale up when average CPU > 30% (VERY aggressive for demo)
-  
-  # ============================================================================
-  # Trigger 3: Memory Utilization (Resource-Based Scaling)
-  # ============================================================================
-  - type: memory
-    metricType: Utilization     # Use percentage utilization
-    metadata:
-      value: '80'               # Scale up when average memory > 80%
+      value: '50'               # Scale up if CPU exceeds 50% (safety net)
 
 ---
 # ============================================================================
@@ -80,11 +75,6 @@ spec:
   # Polling and cooldown settings
   pollingInterval: 15           # Check metrics every 15 seconds
   cooldownPeriod: 300           # Wait 5 minutes before scaling down (Grafana needs stability)
-  
-  # Fallback configuration
-  fallback:
-    failureThreshold: 3
-    replicas: 1
   
   triggers:
   # CPU-based scaling

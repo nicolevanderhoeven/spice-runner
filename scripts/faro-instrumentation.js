@@ -72,6 +72,11 @@
         timestamp: Date.now()
       });
 
+      // Mark session as active for metrics/autoscaling
+      if (window.gameMetrics) {
+        window.gameMetrics.setActive();
+      }
+
       console.log('▶️ Game started');
       return originalPlayIntro.apply(this, arguments);
     };
@@ -135,6 +140,11 @@
         }
       });
 
+      // Mark session as inactive for metrics/autoscaling
+      if (window.gameMetrics) {
+        window.gameMetrics.setInactive();
+      }
+
       console.log('💥 Game over! Final score:', finalScore);
       return originalGameOver.apply(this, arguments);
     };
@@ -165,6 +175,11 @@
         sessionId: currentSessionId,
         timestamp: Date.now()
       });
+
+      // Reactivate session metrics after restart
+      if (window.gameMetrics) {
+        window.gameMetrics.setActive();
+      }
 
       console.log('🔄 Game restarted, session:', currentSessionId);
       return originalRestart.apply(this, arguments);

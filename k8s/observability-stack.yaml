@@ -1443,11 +1443,128 @@ data:
           }
         },
         {
+          "id": 28,
+          "title": "🎮 Game Sessions per Pod (1:1 Target)",
+          "type": "gauge",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 12, "x": 0, "y": 16},
+          "targets": [
+            {
+              "expr": "sum(rate(nginx_http_requests_total{service=\"spice-runner-nginx\"}[1m])) / count(kube_pod_status_phase{pod=~\"spice-runner-.*\", namespace=\"default\", phase=\"Running\"})",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showThresholdLabels": true,
+            "showThresholdMarkers": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "red"},
+                  {"value": 0.8, "color": "yellow"},
+                  {"value": 0.9, "color": "green"},
+                  {"value": 1.1, "color": "yellow"},
+                  {"value": 1.5, "color": "orange"}
+                ]
+              },
+              "unit": "short",
+              "min": 0,
+              "max": 2,
+              "decimals": 2,
+              "mappings": [
+                {
+                  "type": "special",
+                  "options": {
+                    "match": "null",
+                    "result": {"text": "No Pods"}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 29,
+          "title": "📊 Active Game Sessions (Approx.)",
+          "type": "stat",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 6, "x": 12, "y": 16},
+          "targets": [
+            {
+              "expr": "sum(rate(nginx_http_requests_total{service=\"spice-runner-nginx\"}[1m]))",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "blue"},
+                  {"value": 1, "color": "green"},
+                  {"value": 10, "color": "yellow"},
+                  {"value": 50, "color": "orange"},
+                  {"value": 100, "color": "red"}
+                ]
+              },
+              "unit": "reqps",
+              "decimals": 2,
+              "mappings": []
+            }
+          }
+        },
+        {
+          "id": 30,
+          "title": "🚀 Spice Runner Pods",
+          "type": "stat",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 6, "x": 18, "y": 16},
+          "targets": [
+            {
+              "expr": "count(kube_pod_status_phase{pod=~\"spice-runner-.*\", namespace=\"default\", phase=\"Running\"})",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "blue"},
+                  {"value": 1, "color": "green"},
+                  {"value": 10, "color": "yellow"},
+                  {"value": 50, "color": "orange"},
+                  {"value": 100, "color": "red"}
+                ]
+              },
+              "unit": "short",
+              "decimals": 0,
+              "mappings": []
+            }
+          }
+        },
+        {
           "id": 5,
           "title": "Cluster CPU Usage",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22},
           "targets": [
             {
               "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[5m])) by (node)",
@@ -1473,7 +1590,7 @@ data:
           "title": "Cluster Memory Usage",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22},
           "targets": [
             {
               "expr": "sum(container_memory_working_set_bytes{container!=\"\"}) by (node)",
@@ -1499,7 +1616,7 @@ data:
           "title": "CPU Usage by Namespace",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 30},
           "targets": [
             {
               "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[5m])) by (namespace)",
@@ -1524,7 +1641,7 @@ data:
           "title": "Memory Usage by Namespace",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 30},
           "targets": [
             {
               "expr": "sum(container_memory_working_set_bytes{container!=\"\"}) by (namespace)",
@@ -1549,7 +1666,7 @@ data:
           "title": "Pod Status by Namespace",
           "type": "table",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 38},
           "targets": [
             {
               "expr": "sum(kube_pod_status_phase) by (namespace, phase)",
@@ -1589,7 +1706,7 @@ data:
           "title": "Node Status",
           "type": "table",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 38},
           "targets": [
             {
               "expr": "kube_node_info",
@@ -1633,7 +1750,7 @@ data:
           "title": "Deployments",
           "type": "stat",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 40},
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 46},
           "targets": [
             {
               "expr": "count(kube_deployment_created)",
@@ -1657,7 +1774,7 @@ data:
           "title": "StatefulSets",
           "type": "stat",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 40},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 46},
           "targets": [
             {
               "expr": "count(kube_statefulset_created)",
@@ -1681,7 +1798,7 @@ data:
           "title": "DaemonSets",
           "type": "stat",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 40},
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 46},
           "targets": [
             {
               "expr": "count(kube_daemonset_created)",
@@ -1705,7 +1822,7 @@ data:
           "title": "Services",
           "type": "stat",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 40},
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 46},
           "targets": [
             {
               "expr": "count(kube_service_info)",
@@ -1729,7 +1846,7 @@ data:
           "title": "⏱️ Pending Pods Over Time",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 44},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 50},
           "targets": [
             {
               "expr": "sum(kube_pod_status_phase{phase=\"Pending\"})",
@@ -1777,7 +1894,7 @@ data:
           "title": "📋 Node Resource Capacity Details",
           "type": "table",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 44},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 50},
           "targets": [
             {
               "expr": "kube_node_status_allocatable{resource=\"cpu\"}",
@@ -1873,7 +1990,7 @@ data:
           "title": "Network I/O by Pod",
           "type": "timeseries",
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 52},
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 58},
           "targets": [
             {
               "expr": "sum(rate(container_network_receive_bytes_total[5m])) by (pod)",
