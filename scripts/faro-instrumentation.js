@@ -97,6 +97,11 @@
     window.Runner.prototype.onKeyDown = function(e) {
       const result = originalOnKeyDown.apply(this, arguments);
       
+      // Update activity timestamp for idle timeout tracking
+      if (window.gameMetrics && window.gameMetrics.updateActivity) {
+        window.gameMetrics.updateActivity();
+      }
+      
       // Check for jump action: keyboard keys (Up arrow or Space) OR touch event
       const isJumpKey = e.keyCode === 38 || e.keyCode === 32;
       const isTouchJump = e.type === 'touchstart';
@@ -185,7 +190,19 @@
       return originalRestart.apply(this, arguments);
     };
 
+    // Add global activity listeners to catch any player interaction
+    // This ensures idle timeout resets on any activity, not just tracked events
+    const activityEvents = ['keydown', 'mousedown', 'touchstart', 'click'];
+    activityEvents.forEach(eventType => {
+      document.addEventListener(eventType, () => {
+        if (window.gameMetrics && window.gameMetrics.updateActivity) {
+          window.gameMetrics.updateActivity();
+        }
+      }, { passive: true });
+    });
+
     console.log('✅ Spice Runner instrumented with Faro');
+    console.log('👁️ Activity tracking enabled for idle timeout');
   });
 })();
 

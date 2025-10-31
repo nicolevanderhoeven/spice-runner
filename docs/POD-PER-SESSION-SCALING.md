@@ -68,16 +68,37 @@ This document explains the implementation of **1:1 pod-per-session scaling** for
   - `sessionId`: Unique game session identifier
   - `timestamp`: Event timestamp
   - `status`: `active` or `inactive`
+  - `idleTime`: Milliseconds since last activity
+  - `sessionDuration`: Total session time
 - Automatically starts when game begins
 - Automatically stops when game ends
+
+**Session Timeout Protection**:
+- **Idle timeout**: 5 minutes without any player interaction
+- **Maximum session**: 30 minutes absolute limit (prevents infinite sessions)
+- **Activity tracking**: Monitors keypresses, mouse clicks, touches
+- **Tab close detection**: Cleans up session when browser tab closes
+- **Visibility API**: Updates activity when tab regains focus
 
 **Lifecycle**:
 ```javascript
 // Game starts → heartbeat begins
 game.start() → gameMetrics.setActive() → heartbeat every 5s
 
+// Player active → idle timer resets
+player.keypress() → gameMetrics.updateActivity() → timer resets
+
+// Player idle 5min → session times out
+no activity for 5min → heartbeat detects timeout → setInactive()
+
+// Maximum duration reached → session times out
+30min elapsed → heartbeat detects max duration → setInactive()
+
 // Game ends → heartbeat stops
 game.over() → gameMetrics.setInactive() → heartbeat stops
+
+// Tab closes → session cleaned up
+window.close() → beforeunload → setInactive() via sendBeacon
 
 // Game restarts → heartbeat resumes
 game.restart() → gameMetrics.setActive() → heartbeat resumes
@@ -367,13 +388,22 @@ triggers:
 # 1. Verify minReplicaCount is 0
 kubectl get scaledobject spice-runner-keda -n default -o yaml | grep minReplicaCount
 
-# 2. Check if there's still traffic
-curl -s https://nvdh.dev/spice/ >/dev/null
-# Wait 60 seconds for metrics to update
+# 2. Check if there's still traffic (abandoned sessions)
+kubectl logs -l app=spice-runner -n default -c alloy | grep heartbeat | tail -20
 
-# 3. Check KEDA logs
+# 3. Wait for session timeout (5 minutes idle or 30 minutes max)
+# Sessions will automatically timeout and stop sending heartbeats
+
+# 4. Check KEDA logs
 kubectl logs -n keda -l app.kubernetes.io/name=keda-operator | grep "Scaling to zero"
 ```
+
+**Common Causes**:
+- Abandoned game sessions (will timeout after 5 minutes idle)
+- Browser tabs left open (will timeout after 30 minutes max)
+- Background load tests running
+
+**Note**: With the session timeout feature, pods will always scale down within 35 minutes maximum (30min max session + 5min cooldown), even if tabs are never closed.
 
 ## Production Considerations
 
