@@ -54,6 +54,13 @@ export CLUSTER_NAME="spice-runner-cluster"
 export REGION="us-central1"
 export GCP_PROJECT_ID=$(gcloud config get-value project)
 
+# Create Grafana admin credentials secret
+kubectl create secret generic grafana-admin-credentials \
+  --from-literal=admin-user=admin \
+  --from-literal=admin-password=YOUR_PASSWORD_HERE \
+  -n observability \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 # Deploy the observability stack
 kubectl apply -f k8s/observability-stack.yaml
 
@@ -172,7 +179,10 @@ spice-runner/
 After you deploy the application, you can access the following services:
 
 - **Game**: `http://<YOUR_DOMAIN>/spice/`
-- **Grafana**: Port-forward or expose via ingress
+- **Grafana**: Access via LoadBalancer IP (requires login with credentials set during deployment)
+  - Get IP: `kubectl get service grafana -n observability`
+  - Default username: `admin`
+  - Password: Set via the `grafana-admin-credentials` secret
 - **Prometheus**: `http://prometheus.observability.svc.cluster.local:9090`
 
 ## Cost Optimization
@@ -227,6 +237,28 @@ If you experience unexpectedly high costs, take the following actions:
 - Review instance types: Run `kubectl get nodes -o wide` to see active node types
 - Check NodePool limits: Run `kubectl get nodepools -o yaml` to verify configuration
 - Set up billing alerts in GCP Console to monitor spending
+
+### Grafana login issues
+
+If you cannot log into Grafana:
+
+```bash
+# Verify the secret exists
+kubectl get secret grafana-admin-credentials -n observability
+
+# Check if Grafana is using the secret
+kubectl describe deployment grafana -n observability | grep -A 5 "Environment"
+
+# Reset the password if needed
+kubectl delete secret grafana-admin-credentials -n observability
+kubectl create secret generic grafana-admin-credentials \
+  --from-literal=admin-user=admin \
+  --from-literal=admin-password=NEW_PASSWORD_HERE \
+  -n observability
+
+# Restart Grafana to pick up new credentials
+kubectl rollout restart deployment/grafana -n observability
+```
 
 ## Contributing
 

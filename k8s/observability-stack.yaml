@@ -632,12 +632,18 @@ spec:
         - containerPort: 3000
           name: http
         env:
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-admin-credentials
+              key: admin-user
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-admin-credentials
+              key: admin-password
         - name: GF_AUTH_ANONYMOUS_ENABLED
-          value: "true"
-        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          value: "Admin"
-        - name: GF_AUTH_DISABLE_LOGIN_FORM
-          value: "true"
+          value: "false"
         - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
           value: "/var/lib/grafana/dashboards/spice-runner-dashboard.json"
         volumeMounts:
