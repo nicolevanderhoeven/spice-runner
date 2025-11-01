@@ -1,0 +1,538 @@
+---
+# Grafana Kepler Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-kepler-dashboard
+  namespace: observability
+  labels:
+    app: grafana
+    dashboard: kepler
+data:
+  kepler-energy-monitoring.json: |
+    {
+      "title": "Kepler Energy & Power Consumption",
+      "uid": "kepler-energy-monitoring",
+      "tags": ["kepler", "energy", "power", "sustainability"],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "⚡ Total Cluster Power Consumption (Watts)",
+          "type": "stat",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "sum(rate(kepler_node_platform_joules_total[1m]) * 1000)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "green"},
+                  {"value": 50, "color": "yellow"},
+                  {"value": 100, "color": "orange"},
+                  {"value": 200, "color": "red"}
+                ]
+              },
+              "unit": "watt",
+              "decimals": 2
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "💡 Total Energy Consumed (kWh)",
+          "type": "stat",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+          "targets": [
+            {
+              "expr": "sum(kepler_node_platform_joules_total) / 3600000",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "kwatth",
+              "decimals": 4
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "🌍 Estimated CO2 Emissions (grams)",
+          "type": "stat",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+          "targets": [
+            {
+              "expr": "(sum(kepler_node_platform_joules_total) / 3600000) * 475",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "green"},
+                  {"value": 100, "color": "yellow"},
+                  {"value": 500, "color": "orange"},
+                  {"value": 1000, "color": "red"}
+                ]
+              },
+              "unit": "grams",
+              "decimals": 2
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "💰 Estimated Cost (USD)",
+          "type": "stat",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+          "targets": [
+            {
+              "expr": "(sum(kepler_node_platform_joules_total) / 3600000) * 0.12",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "graphMode": "area",
+            "colorMode": "value",
+            "textMode": "value_and_name"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "currencyUSD",
+              "decimals": 4
+            }
+          }
+        },
+        {
+          "id": 5,
+          "title": "📊 Power Consumption Over Time",
+          "type": "timeseries",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+          "targets": [
+            {
+              "expr": "sum(rate(kepler_node_platform_joules_total[1m]) * 1000) by (node)",
+              "refId": "A",
+              "legendFormat": "{{node}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 20,
+                "stacking": {"mode": "normal"}
+              },
+              "unit": "watt"
+            }
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": ["last", "mean", "max"]
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "🖥️ Power by Node",
+          "type": "timeseries",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+          "targets": [
+            {
+              "expr": "sum(rate(kepler_container_joules_total[1m]) * 1000) by (node)",
+              "refId": "A",
+              "legendFormat": "{{node}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 10
+              },
+              "unit": "watt"
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "📦 Power by Namespace",
+          "type": "timeseries",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+          "targets": [
+            {
+              "expr": "sum(rate(kepler_container_joules_total[1m]) * 1000) by (container_namespace)",
+              "refId": "A",
+              "legendFormat": "{{container_namespace}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 20,
+                "stacking": {"mode": "normal"}
+              },
+              "unit": "watt"
+            }
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": ["last", "mean"]
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "🎮 Spice Runner Power Consumption",
+          "type": "timeseries",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+          "targets": [
+            {
+              "expr": "sum(rate(kepler_container_joules_total{container_namespace=\"default\", pod_name=~\"spice-runner.*\"}[1m]) * 1000) by (pod_name)",
+              "refId": "A",
+              "legendFormat": "{{pod_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 10
+              },
+              "unit": "watt",
+              "decimals": 2
+            }
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          }
+        },
+        {
+          "id": 9,
+          "title": "🔝 Top 10 Power Consuming Pods",
+          "type": "table",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(kepler_container_joules_total[5m]) * 1000) by (pod_name, container_namespace))",
+              "refId": "A",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "pod_name": "Pod",
+                  "container_namespace": "Namespace",
+                  "Value": "Power (W)"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "displayMode": "auto"
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "Power (W)"},
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "watt"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  },
+                  {
+                    "id": "color",
+                    "value": {"mode": "thresholds"}
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {"value": 0, "color": "green"},
+                        {"value": 5, "color": "yellow"},
+                        {"value": 10, "color": "orange"},
+                        {"value": 20, "color": "red"}
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 10,
+          "title": "⚙️ CPU vs Power Correlation",
+          "type": "timeseries",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+          "targets": [
+            {
+              "expr": "sum(rate(kepler_container_joules_total[1m]) * 1000)",
+              "refId": "A",
+              "legendFormat": "Power (W)"
+            },
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[1m])) * 100",
+              "refId": "B",
+              "legendFormat": "CPU Usage (%)"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 10
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "Power (W)"},
+                "properties": [
+                  {"id": "unit", "value": "watt"},
+                  {"id": "custom.axisPlacement", "value": "left"}
+                ]
+              },
+              {
+                "matcher": {"id": "byName", "options": "CPU Usage (%)"},
+                "properties": [
+                  {"id": "unit", "value": "percent"},
+                  {"id": "custom.axisPlacement", "value": "right"}
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 11,
+          "title": "📈 Energy Efficiency Score (Work/Watt)",
+          "type": "gauge",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 8, "x": 0, "y": 28},
+          "targets": [
+            {
+              "expr": "(sum(rate(nginx_http_requests_total[1m])) / sum(rate(kepler_container_joules_total{container_namespace=\"default\"}[1m]) * 1000)) * 100",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showThresholdLabels": true,
+            "showThresholdMarkers": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": 0, "color": "red"},
+                  {"value": 10, "color": "orange"},
+                  {"value": 50, "color": "yellow"},
+                  {"value": 100, "color": "green"}
+                ]
+              },
+              "unit": "short",
+              "min": 0,
+              "max": 200,
+              "decimals": 2,
+              "mappings": [
+                {
+                  "type": "special",
+                  "options": {
+                    "match": "null",
+                    "result": {"text": "N/A"}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 12,
+          "title": "📊 Power by Container (Top 10)",
+          "type": "bargauge",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 6, "w": 8, "x": 8, "y": 28},
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(kepler_container_joules_total[5m]) * 1000) by (container_name))",
+              "refId": "A",
+              "legendFormat": "{{container_name}}"
+            }
+          ],
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient",
+            "showUnfilled": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "watt",
+              "decimals": 2
+            }
+          }
+        },
+        {
+          "id": 13,
+          "title": "ℹ️ About These Metrics",
+          "type": "text",
+          "gridPos": {"h": 6, "w": 8, "x": 16, "y": 28},
+          "options": {
+            "mode": "markdown",
+            "content": "## Kepler Energy Monitoring\n\n**Data Source:** Model-based estimation\n\nSince this cluster runs on GKE without direct hardware power sensors (RAPL), Kepler uses statistical models to estimate power consumption based on:\n\n- CPU utilization\n- Memory usage\n- Network I/O\n- Disk I/O\n\n**Estimations:**\n- CO2: ~475g per kWh (US average grid)\n- Cost: ~$0.12 per kWh\n\n**Use Cases:**\n- Compare relative efficiency between workloads\n- Identify power-hungry pods\n- Track consumption trends\n- Sustainability reporting\n\n**Note:** Values are estimates, not precise measurements."
+          }
+        },
+        {
+          "id": 14,
+          "title": "🔋 Power Distribution by Namespace",
+          "type": "piechart",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 34},
+          "targets": [
+            {
+              "expr": "sum(rate(kepler_container_joules_total[5m]) * 1000) by (container_namespace)",
+              "refId": "A",
+              "legendFormat": "{{container_namespace}}"
+            }
+          ],
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": ["value", "percent"]
+            },
+            "pieType": "pie",
+            "tooltip": {
+              "mode": "single"
+            },
+            "displayLabels": ["percent"]
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "watt",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 15,
+          "title": "⏱️ Power Trend (24h comparison)",
+          "type": "timeseries",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 34},
+          "targets": [
+            {
+              "expr": "sum(rate(kepler_node_platform_joules_total[1m]) * 1000)",
+              "refId": "A",
+              "legendFormat": "Current"
+            },
+            {
+              "expr": "sum(rate(kepler_node_platform_joules_total[1m] offset 24h) * 1000)",
+              "refId": "B",
+              "legendFormat": "24h ago"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 10,
+                "lineWidth": 2
+              },
+              "unit": "watt"
+            }
+          }
+        }
+      ]
+    }
+

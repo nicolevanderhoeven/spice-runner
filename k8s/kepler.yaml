@@ -1,0 +1,245 @@
+---
+# Kepler Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kepler
+---
+# Kepler ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kepler
+  namespace: kepler
+---
+# Kepler ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kepler
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/metrics
+  - nodes/stats
+  - nodes/proxy
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - nodes/stats
+  verbs: ["get"]
+- nonResourceURLs:
+  - /metrics
+  verbs: ["get"]
+---
+# Kepler ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kepler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kepler
+subjects:
+- kind: ServiceAccount
+  name: kepler
+  namespace: kepler
+---
+# Kepler ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kepler-config
+  namespace: kepler
+data:
+  # Kepler configuration
+  KEPLER_NAMESPACE: "kepler"
+  ENABLE_GPU: "false"
+  METRICS_PORT: "9102"
+  BIND_ADDRESS: "0.0.0.0:9102"
+  # Disable RAPL requirement (for GKE)
+  ENABLE_RAPL: "false"
+  ENABLE_PLATFORM_RAPL: "false"
+  ENABLE_EBPF_CGROUPID: "true"
+  # Use model-based estimation (for GKE without RAPL)
+  ESTIMATOR: "true"
+  MODEL_SERVER_ENABLE: "true"
+  MODEL_SERVER_URL: "http://kepler-model-server.kepler.svc.cluster.local:8100"
+  MODEL_CONFIG: "CONTAINER_COMPONENTS_ESTIMATOR=true,CONTAINER_COMPONENTS_INIT_URL=https://raw.githubusercontent.com/sustainable-computing-io/kepler-model-server/main/tests/test_models/DynComponentModelWeight/CgroupOnly/ScikitMixed/ScikitMixed.json"
+---
+# Kepler DaemonSet
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kepler
+  namespace: kepler
+  labels:
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kepler
+      app.kubernetes.io/component: exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kepler
+        app.kubernetes.io/component: exporter
+    spec:
+      serviceAccountName: kepler
+      hostNetwork: true
+      hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: kepler
+        image: quay.io/sustainable_computing_io/kepler:release-0.7.11
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        ports:
+        - name: http-metrics
+          containerPort: 9102
+          hostPort: 9102
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9102
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          timeoutSeconds: 10
+          failureThreshold: 5
+        envFrom:
+        - configMapRef:
+            name: kepler-config
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        volumeMounts:
+        - name: lib-modules
+          mountPath: /lib/modules
+          readOnly: true
+        - name: tracing
+          mountPath: /sys
+          readOnly: true
+        - name: proc
+          mountPath: /proc
+          readOnly: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+          type: Directory
+      - name: tracing
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: proc
+        hostPath:
+          path: /proc
+          type: Directory
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/control-plane
+---
+# Kepler Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: kepler
+  namespace: kepler
+  labels:
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http-metrics
+    port: 9102
+    targetPort: http-metrics
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+---
+# Kepler Model Server Deployment (for estimation)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kepler-model-server
+  namespace: kepler
+  labels:
+    app.kubernetes.io/name: kepler-model-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kepler-model-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kepler-model-server
+    spec:
+      containers:
+      - name: model-server
+        image: quay.io/sustainable_computing_io/kepler_model_server:v0.7
+        imagePullPolicy: IfNotPresent
+        command:
+        - python3
+        - -u
+        - src/server/model_server.py
+        ports:
+        - name: http
+          containerPort: 8100
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8100
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+---
+# Kepler Model Server Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: kepler-model-server
+  namespace: kepler
+  labels:
+    app.kubernetes.io/name: kepler-model-server
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8100
+    targetPort: http
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: kepler-model-server
+
