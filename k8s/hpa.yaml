@@ -1,3 +1,21 @@
+# ============================================================================
+# TRADITIONAL HPA CONFIGURATION (NOT CURRENTLY APPLIED)
+# ============================================================================
+# This HPA is NOT currently applied to the cluster.
+# The cluster is using KEDA ScaledObject instead (k8s/keda-scaledobject.yaml)
+#
+# This file is kept for reference in case we want to switch back to 
+# traditional HPA-based autoscaling in the future.
+#
+# To switch from KEDA back to HPA:
+#   1. kubectl delete scaledobject spice-runner-keda -n default
+#   2. kubectl apply -f k8s/hpa.yaml
+#
+# Key differences:
+#   - HPA: minReplicas: 2 (always running, no scale-to-zero)
+#   - KEDA: minReplicaCount: 0 (scale-to-zero capability)
+# ============================================================================
+
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
