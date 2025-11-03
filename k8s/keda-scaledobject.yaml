@@ -81,13 +81,13 @@ spec:
   - type: cpu
     metricType: Utilization
     metadata:
-      value: '60'               # Scale up when average CPU > 60%
+      value: '80'               # Scale up when average CPU > 80%
   
   # Memory-based scaling
   - type: memory
     metricType: Utilization
     metadata:
-      value: '70'               # Scale up when average memory > 70%
+      value: '80'               # Scale up when average memory > 80%
 
 ---
 # Prometheus ScaledObject - Vertical scaling awareness (can add more triggers later)
