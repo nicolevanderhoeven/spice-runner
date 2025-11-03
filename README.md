@@ -285,4 +285,4 @@ See repository for license information.
 
 ---
 
-**Built with**: Kubernetes, KEDA, GKE Cluster Autoscaler, Grafana Alloy, Prometheus, Loki, Tempo, and Kepler.
+**Built with**: Kubernetes, KEDA, GKE Cluster Autoscaler, Grafana Alloy, Prometheus, Loki, Tempo, Kepler, and k6.
