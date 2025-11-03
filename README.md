@@ -13,6 +13,7 @@ This project includes the following features:
 - **KEDA Autoscaling**: Pod autoscaling based on HTTP traffic, CPU, and memory
 - **GKE Cluster Autoscaler**: Automatic node provisioning based on pending pods
 - **Real-time Monitoring**: Grafana Alloy, Prometheus, Loki, and Tempo
+- **Energy Monitoring**: Kepler integration for power consumption and energy tracking
 
 ## Architecture
 
@@ -29,9 +30,9 @@ Grafana Alloy Sidecar (observability agent)
 ├─→ Loki (logs)
 └─→ Tempo (traces)
     ↓
-KEDA (scales pods based on metrics)
-    ↓
-GKE Cluster Autoscaler (provisions nodes for pending pods)
+├─→ KEDA (scales pods based on metrics)
+├─→ GKE Cluster Autoscaler (provisions nodes for pending pods)
+└─→ Kepler (energy & power consumption monitoring)
 ```
 
 ## Quick start
@@ -52,6 +53,7 @@ To deploy the application to GKE, run the following commands:
 # Configure your cluster
 export CLUSTER_NAME="spice-runner-cluster"
 export REGION="us-central1"
+export ZONE="us-central1-a"
 export GCP_PROJECT_ID=$(gcloud config get-value project)
 
 # Create Grafana admin credentials secret
@@ -139,19 +141,20 @@ The following documentation provides detailed guides for setup, configuration, a
 - [KEDA quickstart](docs/KEDA-QUICKSTART.md) - Quick KEDA setup
 - [KEDA testing guide](docs/KEDA-TESTING.md) - KEDA testing procedures
 - [HPA testing guide](docs/HPA-TESTING.md) - Horizontal Pod Autoscaler guide
+- [Pod-per-session scaling](docs/POD-PER-SESSION-SCALING.md) - Advanced scaling patterns
+- [Observability and autoscaling](docs/OBSERVABILITY-AUTOSCALING.md) - Integration guide
 
 ### Monitoring and operations
 
 - [Kubernetes monitoring setup](docs/K8S-MONITORING.md) - Kubernetes monitoring configuration
 - [Kubernetes Dashboard guide](docs/KUBERNETES-DASHBOARD-GUIDE.md) - Dashboard usage
-- [Grafana queries](docs/GRAFANA-QUERIES.md) - Useful Grafana queries
-- [Demo guide](docs/DEMO-GUIDE.md) - Demo walkthrough
+- [Pod-per-session monitoring](docs/POD-PER-SESSION-MONITORING.md) - Session-based monitoring
+- [Kepler deployment summary](docs/KEPLER-DEPLOYMENT-SUMMARY.md) - Energy monitoring deployment
+- [Kepler guide](docs/KEPLER-GUIDE.md) - Power consumption monitoring
 
 ### Setup and configuration
 
 - [Implementation summary](docs/IMPLEMENTATION-SUMMARY.md) - Implementation overview
-- [Domain setup guide](docs/DOMAIN-SETUP.md) - Domain and ingress configuration
-- [NVDH setup guide](docs/NVDH-SETUP.md) - NVDH configuration
 
 ## Project structure
 
@@ -163,10 +166,16 @@ spice-runner/
 │   ├── deployment-cloud-stack.yaml    # Main deployment
 │   ├── service.yaml                   # Service definition
 │   ├── keda-scaledobject.yaml        # KEDA autoscaling
-│   └── observability-stack.yaml      # Grafana, Prometheus, Loki, Tempo
+│   ├── observability-stack.yaml      # Grafana, Prometheus, Loki, Tempo
+│   ├── kepler.yaml                   # Kepler energy monitoring
+│   └── kepler-dashboard.yaml         # Kepler Grafana dashboard
 ├── scripts/                       # Automation scripts
 │   ├── install-keda.sh               # Install KEDA
-│   └── run-hpa-test.sh              # Run KEDA tests
+│   ├── deploy-kepler.sh              # Deploy Kepler
+│   ├── run-hpa-test.sh               # Run KEDA tests
+│   ├── hpa-load-test.js              # Load testing
+│   ├── mega-spike-test.js            # Spike testing
+│   └── ultimate-demo-test.js         # Comprehensive demo
 ├── img/                           # Game graphics
 ├── index.html                     # Game frontend
 ├── nginx.conf                     # NGINX configuration
@@ -183,6 +192,7 @@ After you deploy the application, you can access the following services:
   - Get IP: `kubectl get service grafana -n observability`
   - Default username: `admin`
   - Password: Set via the `grafana-admin-credentials` secret
+  - **Kepler Dashboard**: Available in Grafana under "Energy" folder - "Kepler Energy & Power Consumption"
 - **Prometheus**: `http://prometheus.observability.svc.cluster.local:9090`
 
 ## Cost Optimization
@@ -275,4 +285,4 @@ See repository for license information.
 
 ---
 
-**Built with**: Kubernetes, KEDA, GKE Cluster Autoscaler, Grafana Alloy, Prometheus, Loki, and Tempo.
+**Built with**: Kubernetes, KEDA, GKE Cluster Autoscaler, Grafana Alloy, Prometheus, Loki, Tempo, and Kepler.
