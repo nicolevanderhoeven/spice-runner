@@ -1,39 +1,35 @@
 # Spice Runner
 
+This is a demo project created by me ([Nicole van der Hoeven](https://nicolevanderhoeven.com)) for my talk at [Øredev 2025](https://oredev.org/) in Malmö, Sweden, on November 5th, 2025. The talk is called _"The Spice Must Flow: The Fremen Guide to Sustainable Observability"._ You can find my slides [here](https://nicole.to/spiceslides). See the very end of this README for some references I used in the slides. Below is the abstract of the talk.
+
+> Nobody wants to be wasteful. But how do you balance that with the need for enough data to fix things when they go wrong? After all, no matter how much it costs, there are SLOs to keep. The spice-- the telemetry-- must flow.
+>
+> The Fremen are a people who live on the planet Arrakis, simultaneously rich in spice while poor in water. But the Fremen have managed to thrive, not just survive, on very little while continuing to produce spice. What would it take to apply this "desert planet thinking" to observability?
+> 
+> In this talk, you'll learn about the hidden environmental and financial costs of your observability stack and how to reduce them. You'll learn about the complications of measuring cost for ephemeral resources on Kubernetes, how to use KEDA to "right-size" resources when you don't know what the right size is, and how to convince your teams to drop all but the most meaningful telemetry data. In the end, the spice must flow, but there must still be enough water to sustain all.
+
 The Spice Runner game is a Dune-themed browser game with full observability and advanced autoscaling capabilities. This project demonstrates production-grade Kubernetes deployment patterns with comprehensive monitoring and intelligent scaling.
 
-![chrome offline game cast](img/chrome_offline_game.gif)
+![Spice Runner gameplay](img/spice-runner.gif)
 
 ## Features
 
 This project includes the following features:
 
 - **Interactive Game**: Dune-themed endless runner browser game
-- **Full Observability**: Metrics, logs, and traces with Grafana stack
-- **KEDA Autoscaling**: Pod autoscaling based on HTTP traffic, CPU, and memory
-- **GKE Cluster Autoscaler**: Automatic node provisioning based on pending pods
-- **Real-time Monitoring**: Grafana Alloy, Prometheus, Loki, and Tempo
-- **Energy Monitoring**: Kepler integration for power consumption and energy tracking
+- **Full Instrumentation**: [Faro](https://nicole.to/farorepo) for frontend instrumentation, [Alloy](https://nicole.to/alloyrepo) for telemetry collection
+- **Full Observability**: Metrics, logs, and traces with [Prometheus](https://nicole.to/promrepo), [Loki](https://nicole.to/lokirepo), and [Tempo](https://nicole.to/temporepo)
+- **Pod Autoscaling**: Pod autoscaling based on HTTP traffic, CPU, and memory with [KEDA](https://nicole.to/kedarepo)
+- **Cluster Autoscaler**: Automatic node provisioning based on pending pods with [GKE Cluster Autoscaler](https://nicole.to/gkeautoscaler)
+- **Real-time Monitoring**: [Grafana](https://nicole.to/grafanarepo)
+- **Energy Monitoring**: [Kepler](https://nicole.to/keplerrepo) integration for power consumption and energy tracking
+- **Load Testing**: [k6](https://nicole.to/k6repo) for load testing
 
 ## Architecture
 
 The application uses a multi-layer architecture with integrated observability and autoscaling:
 
-```
-User Traffic
-    ↓
-NGINX (with JSON logging)
-    ↓
-Grafana Alloy Sidecar (observability agent)
-    ↓
-├─→ Prometheus (metrics)
-├─→ Loki (logs)
-└─→ Tempo (traces)
-    ↓
-├─→ KEDA (scales pods based on metrics)
-├─→ GKE Cluster Autoscaler (provisions nodes for pending pods)
-└─→ Kepler (energy & power consumption monitoring)
-```
+![Spice Runner architecture](img/spice-runner-architecture.png)
 
 ## Quick start
 
@@ -270,18 +266,21 @@ kubectl create secret generic grafana-admin-credentials \
 kubectl rollout restart deployment/grafana -n observability
 ```
 
-## Contributing
+## Talk References
 
-This is a demo project for showcasing autoscaling capabilities. You can contribute by:
+### Images
 
-- Testing different autoscaling configurations
-- Adding new game features
-- Improving observability dashboards
-- Sharing your autoscaling experiences
+- Dune Art Wallpaper, HD Movies 4K Wallpapers, Images and Background - Wallpapers Den: [wallpapersden.com](https://wallpapersden.com/dune-art-wallpaper/)
+- Sci Fi Dune Planet, HD wallpaper: https://www.peakpx.com
+- Mystery of the Spacing Guild in Lynch's 'Dune' Movie: https://dunenewsnet.com/2024/03/the-spacing-guild-mystery-david-lynch-dune-movie/
+- The Dune: Prophecy TV Series Is Doing Much More Than Setting Up the Bene Gesserit: https://www.ign.com/articles/the-dune-prophecy-tv-series-is-doing-much-more-than-setting-up-the-bene-gesserit
+- Discovering the Fremen, Part 2: ‘Dune’s Ecologists: https://dunenewsnet.com/2025/03/discovering-the-fremen-ecologists-of-dune/
+- How Dune created the sinister sounds of those menacing sandworms: https://ew.com/awards/oscars/dune-sandworm-sound-engineers/
+- Dune 2 Trailer Hints At A Tricky Timeline Change: https://www.inverse.com/entertainment/dune-2-trailer-paul-eye-color-future-visions
+- Dune: Part Two Makes One Key Change From the Book. The Result Is Brilliant.: https://slate.com/culture/2024/03/dune-part-2-zendaya-chani-timothee-chalamet-paul-book-versus-movie.html
+- Fremen Sietch Water Cache: https://www.pinterest.com/pin/fremen-sietch-water-cache-by-mattw--692498880203474723/
+- Dune: what the climate of Arrakis can tell us about the hunt for habitable exoplanets: https://theconversation.com/dune-what-the-climate-of-arrakis-can-tell-us-about-the-hunt-for-habitable-exoplanets-225145
 
-## License
-
-See repository for license information.
 
 ---
 
