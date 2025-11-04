@@ -1,6 +1,8 @@
 # Spice Runner
 
-This is a demo project created by me ([Nicole van der Hoeven](https://nicolevanderhoeven.com)) for my talk at [Øredev 2025](https://oredev.org/) in Malmö, Sweden, on November 5th, 2025. The talk is called _"The Spice Must Flow: The Fremen Guide to Sustainable Observability"._ You can find my slides [here](https://nicole.to/spiceslides). See the very end of this README for some references I used in the slides. Below is the abstract of the talk.
+This is a demo project created by me ([Nicole van der Hoeven](https://nicolevanderhoeven.com)) for my talk at [Øredev 2025](https://oredev.org/) in Malmö, Sweden, on November 5th, 2025. The talk is called _"The Spice Must Flow: The Fremen Guide to Sustainable Observability"._ You can find my slides live [here](https://nicole.to/spiceslides) or you can [download the PDF here](spice-must-flow-slides.pdf). See the very end of this README for some references I used in the slides. Below is the abstract of the talk.
+
+![Talk title cover](img/spice-must-flow.png)
 
 > Nobody wants to be wasteful. But how do you balance that with the need for enough data to fix things when they go wrong? After all, no matter how much it costs, there are SLOs to keep. The spice-- the telemetry-- must flow.
 >
