@@ -270,8 +270,12 @@ kubectl rollout restart deployment/grafana -n observability
 
 ## References
 
+- [Electricity map per country](https://app.electricitymaps.com/map/)
+- [GCP Carbon Data Across Google Regions](https://cloud.google.com/sustainability/region-carbon)
 - CNCF TAG: Environmental Sustainability: [repo](https://nicole.to/tagenv)
 - (blog) How Grafana Labs switched to Karpenter to reduce costs and complexities in Amazon EKS: [blog](https://nicole.to/karpenter)
+- Statistics on data centre energy usage: O'Brien, I (2024). *Data center emissions probably 662% higher than big tech claims. Can it keep up the ruse?* Retrieved from The Guardian in October 2025: https://www.theguardian.com/technology/2024/sep/15/data-center-gas-emissions-tech
+- Statistics on global energy consumption: Ritchie, H., Rosado, P., & Roser, M. (2020). *Energy production and consumption*. Our World in Data. Retrieved in October 2025 from https://ourworldindata.org/energy-production-consumption
 
 ### Images
 
@@ -285,7 +289,7 @@ kubectl rollout restart deployment/grafana -n observability
 - Dune: Part Two Makes One Key Change From the Book. The Result Is Brilliant.: https://slate.com/culture/2024/03/dune-part-2-zendaya-chani-timothee-chalamet-paul-book-versus-movie.html
 - Fremen Sietch Water Cache: https://www.pinterest.com/pin/fremen-sietch-water-cache-by-mattw--692498880203474723/
 - Dune: what the climate of Arrakis can tell us about the hunt for habitable exoplanets: https://theconversation.com/dune-what-the-climate-of-arrakis-can-tell-us-about-the-hunt-for-habitable-exoplanets-225145
-
+- What Is A Mentat In Dune?: https://www.thegamer.com/dune-what-is-a-mentat/
 
 ---
 
