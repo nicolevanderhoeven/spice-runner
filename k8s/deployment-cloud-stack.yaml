@@ -43,11 +43,11 @@ spec:
           mountPath: /var/log/nginx
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "10m"  # Lowered to make CPU scaling more sensitive
+            memory: "64Mi"  # Mi = Mebibytes (binary megabytes): 64Mi = 67,108,864 bytes
+            cpu: "10m"  # m = millicores: 10m = 0.01 CPU cores (1% of a core). Lowered to make CPU scaling more sensitive
           limits:
-            memory: "128Mi"
-            cpu: "200m"
+            memory: "128Mi"  # Maximum 128 Mebibytes allowed
+            cpu: "200m"  # m = millicores: 200m = 0.2 CPU cores (20% of a core)
       
       # Nginx Prometheus Exporter sidecar
       - name: nginx-exporter
