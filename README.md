@@ -268,7 +268,10 @@ kubectl create secret generic grafana-admin-credentials \
 kubectl rollout restart deployment/grafana -n observability
 ```
 
-## Talk References
+## References
+
+- CNCF TAG: Environmental Sustainability: [repo](https://nicole.to/tagenv)
+- (blog) How Grafana Labs switched to Karpenter to reduce costs and complexities in Amazon EKS: [blog](https://nicole.to/karpenter)
 
 ### Images
 
