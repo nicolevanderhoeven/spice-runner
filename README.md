@@ -140,6 +140,7 @@ The following documentation provides detailed guides for setup, configuration, a
 - [KEDA testing guide](docs/KEDA-TESTING.md) - KEDA testing procedures
 - [HPA testing guide](docs/HPA-TESTING.md) - Horizontal Pod Autoscaler guide
 - [Pod-per-session scaling](docs/POD-PER-SESSION-SCALING.md) - Advanced scaling patterns
+- [GKE cluster autoscaler](docs/GKE-CLUSTER-AUTOSCALER.md) - Node-level autoscaling configuration
 - [Observability and autoscaling](docs/OBSERVABILITY-AUTOSCALING.md) - Integration guide
 
 ### Monitoring and operations
