@@ -12,6 +12,8 @@ The Spice Runner game is a Dune-themed browser game with full observability and 
 
 ![Spice Runner gameplay](img/spice-runner.gif)
 
+You can deploy this game yourself, or play it at [nvdh.dev/spice](https://nicole.to/spicegame).
+
 ## Features
 
 This project includes the following features:
