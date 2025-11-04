@@ -1,6 +1,6 @@
 # Spice Runner
 
-This is a demo project created by me ([Nicole van der Hoeven](https://nicolevanderhoeven.com)) for my talk at [Øredev 2025](https://oredev.org/) in Malmö, Sweden, on November 5th, 2025. The talk is called _"The Spice Must Flow: The Fremen Guide to Sustainable Observability"._ You can find my slides live [here](https://nicole.to/spiceslides) or you can [download the PDF here](spice-must-flow-slides.pdf). See the very end of this README for some references I used in the slides. Below is the abstract of the talk.
+This is a demo project created by me ([Nicole van der Hoeven](https://nicolevanderhoeven.com)) for my talk at [Øredev 2025](https://oredev.org/) in Malmö, Sweden, on November 5th, 2025. The talk is called _"The Spice Must Flow: The Fremen Guide to Sustainable Observability"._ You can find my slides live [here](https://nicole.to/spiceslides) or you can [download the PDF with speaker notes here](spice-must-flow-slides.pdf). See the very end of this README for some references I used in the slides. Below is the abstract of the talk.
 
 ![Talk title cover](img/spice-must-flow.png)
 
