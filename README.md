@@ -90,11 +90,49 @@ The application supports two levels of autoscaling to handle varying workloads e
 
 KEDA provides horizontal pod autoscaling based on multiple metrics:
 
-- **Min replicas**: 1
-- **Max replicas**: 10 (can be increased)
+- **Min replicas**: 1 (always available, prevents 502 errors)
+- **Max replicas**: 20 (production), 200 (demo)
 - **Triggers**: HTTP request rate, CPU utilization, memory utilization
 
 For setup details, refer to the [KEDA testing guide](docs/KEDA-TESTING.md).
+
+#### Production vs Demo Configuration
+
+The KEDA configuration in `k8s/keda-scaledobject.yaml` includes two sets of values:
+
+**Production Configuration (Current)**
+- **Purpose**: Cost-effective, stable operation for real-world usage
+- **maxReplicaCount**: `20` - Reasonable limit for actual workload
+- **pollingInterval**: `30s` - Reduces API load on Prometheus
+- **cooldownPeriod**: `300s` (5 min) - Prevents scaling flapping
+- **HTTP threshold**: `10 req/s` - Better pod utilization (fewer, busier pods)
+- **activationThreshold**: `1 req/s` - Requires actual traffic
+- **CPU threshold**: `70%` - Allows good resource utilization
+
+**Demo Configuration (For Live Demonstrations)**
+- **Purpose**: Highly responsive scaling for visual demonstrations
+- **maxReplicaCount**: `200` - Shows extreme scaling capability
+- **pollingInterval**: `5s` - Very responsive to changes
+- **cooldownPeriod**: `30s` - Fast scale-down for demos
+- **HTTP threshold**: `1 req/s` - Approximates 1 pod per session
+- **activationThreshold**: `0.2 req/s` - Triggers on any activity
+- **CPU threshold**: `50%` - Scales up more aggressively
+
+To switch to demo mode, update the values in `k8s/keda-scaledobject.yaml` using the inline comments marked `# DEMO VALUES`, then run:
+
+```bash
+kubectl apply -f k8s/keda-scaledobject.yaml
+```
+
+**Note on Scale-to-Zero**: The configuration keeps `minReplicaCount: 1` to ensure the service is always available. With GCP Ingress, scaling to zero (`minReplicaCount: 0`) causes 502 errors when users visit the site because:
+- No pods are running to handle requests
+- KEDA can't detect incoming traffic without running pods
+- The load balancer fails before KEDA can scale up
+
+To implement true scale-to-zero without 502 errors, consider:
+- KEDA HTTP Add-on (queues requests during cold starts)
+- Knative Serving (built-in request queuing)
+- Google Cloud Run (managed scale-to-zero)
 
 ### GKE Cluster Autoscaler (Node Autoscaling)
 
@@ -198,17 +236,27 @@ After you deploy the application, you can access the following services:
 
 ## Cost Optimization
 
-GKE Cluster Autoscaler helps optimize costs automatically:
+The project is configured with production-friendly values to optimize costs:
 
+### KEDA Pod Autoscaling
+- **Production mode**: Currently active (see [Production vs Demo Configuration](#production-vs-demo-configuration))
+  - Max 20 pods (vs 200 in demo mode)
+  - 30-second polling interval (vs 5 seconds)
+  - 5-minute cooldown (vs 30 seconds)
+  - Better pod utilization (10 req/s threshold vs 1 req/s)
+- **Cost impact**: Runs 1 pod minimum (~$1-3/month), scales only when needed
+
+### GKE Cluster Autoscaler
 - **Automatic scaling**: Adds nodes only when needed, removes when idle
 - **Resource efficiency**: Right-sizes the cluster based on actual demand  
 - **Cost savings**: Reduces waste by scaling down during low traffic
 - **Configuration**: Adjust `--min-nodes` and `--max-nodes` to control costs
 
-To further optimize:
-- Set appropriate resource requests and limits on pods
+### Additional Optimization Tips
+- Set appropriate resource requests and limits on pods (already configured)
 - Use preemptible/spot node pools for non-critical workloads
-- Monitor usage and adjust autoscaling parameters
+- Monitor usage in Grafana and adjust autoscaling parameters
+- Switch to demo configuration only when needed for demonstrations
 
 ## Troubleshooting
 
