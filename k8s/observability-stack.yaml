@@ -784,6 +784,25 @@ data:
             datasourceUid: 'loki'
           serviceMap:
             datasourceUid: 'prometheus'
+
+      - name: PostgreSQL
+        uid: postgres
+        type: grafana-postgresql-datasource
+        access: proxy
+        url: postgres.default.svc.cluster.local:5432
+        database: leaderboard
+        user: spicerunner
+        editable: true
+        secureJsonData:
+          password: spicerunner
+        jsonData:
+          database: leaderboard
+          sslmode: disable
+          maxOpenConns: 10
+          maxIdleConns: 10
+          connMaxLifetime: 14400
+          postgresVersion: 1300
+          timescaledb: false
 ---
 # Grafana Dashboards Config
 apiVersion: v1

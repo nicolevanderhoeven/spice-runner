@@ -14,6 +14,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 	"go.opentelemetry.io/otel"
@@ -52,13 +53,15 @@ var (
 	meter  metric.Meter
 
 	// Custom metrics
-	scoreSubmissionsTotal   metric.Int64Counter
-	scoreSubmissionErrors   metric.Int64Counter
-	cacheHitTotal           metric.Int64Counter
-	cacheMissTotal          metric.Int64Counter
-	scoreValidationDuration metric.Float64Histogram
-	dbQueryDuration         metric.Float64Histogram
-	redisOpDuration         metric.Float64Histogram
+	scoreSubmissionsTotal      metric.Int64Counter
+	scoreSubmissionErrors      metric.Int64Counter
+	cacheHitTotal              metric.Int64Counter
+	cacheMissTotal             metric.Int64Counter
+	scoreValidationDuration    metric.Float64Histogram
+	dbQueryDuration            metric.Float64Histogram
+	redisOpDuration            metric.Float64Histogram
+	httpServerRequestDuration  metric.Float64Histogram
+	httpServerRequestsTotal    metric.Int64Counter
 )
 
 type App struct {
@@ -139,6 +142,8 @@ func main() {
 	// Setup HTTP server with OpenTelemetry instrumentation
 	router := mux.NewRouter()
 	router.Use(otelmux.Middleware(serviceName))
+	router.Use(httpMetricsMiddleware)
+	router.Use(corsMiddleware)
 
 	// Create a subrouter for /spice/leaderboard prefix (for GCP ingress)
 	apiRouter := router.PathPrefix("/spice/leaderboard").Subrouter()
@@ -152,10 +157,7 @@ func main() {
 	router.HandleFunc("/api/scores", app.submitScoreHandler).Methods("POST")
 	router.HandleFunc("/api/leaderboard/top", app.getTopScoresHandler).Methods("GET")
 	router.HandleFunc("/api/leaderboard/player/{name}", app.getPlayerStatsHandler).Methods("GET")
-	router.HandleFunc("/metrics", prometheusHandler).Methods("GET")
-
-	// Enable CORS for frontend
-	router.Use(corsMiddleware)
+	router.Handle("/metrics", promhttp.Handler()).Methods("GET")
 
 	port := getEnv("PORT", "8080")
 	srv := &http.Server{
@@ -301,6 +303,23 @@ func initMetrics() error {
 	redisOpDuration, err = meter.Float64Histogram(
 		"redis.operation.duration.seconds",
 		metric.WithDescription("Duration of Redis operations in seconds"),
+	)
+	if err != nil {
+		return err
+	}
+
+	httpServerRequestDuration, err = meter.Float64Histogram(
+		"http.server.request.duration.seconds",
+		metric.WithDescription("Duration of HTTP server requests in seconds"),
+		metric.WithUnit("s"),
+	)
+	if err != nil {
+		return err
+	}
+
+	httpServerRequestsTotal, err = meter.Int64Counter(
+		"http.server.requests.total",
+		metric.WithDescription("Total number of HTTP server requests"),
 	)
 	if err != nil {
 		return err
@@ -762,12 +781,42 @@ func (app *App) getPlayerStatsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
-var prometheusExporter *prometheus.Exporter
+func httpMetricsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		ctx := r.Context()
 
-func prometheusHandler(w http.ResponseWriter, r *http.Request) {
-	// Metrics are automatically exposed by the Prometheus exporter
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Metrics are exported via OpenTelemetry Prometheus exporter\n"))
+		// Create a response writer wrapper to capture status code
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// Serve the request
+		next.ServeHTTP(wrapped, r)
+
+		// Record metrics
+		duration := time.Since(start).Seconds()
+		route := r.URL.Path
+		method := r.Method
+		status := strconv.Itoa(wrapped.statusCode)
+
+		attrs := metric.WithAttributes(
+			attribute.String("http.method", method),
+			attribute.String("http.route", route),
+			attribute.String("http.status_code", status),
+		)
+
+		httpServerRequestDuration.Record(ctx, duration, attrs)
+		httpServerRequestsTotal.Add(ctx, 1, attrs)
+	})
+}
+
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
 }
 
 func corsMiddleware(next http.Handler) http.Handler {

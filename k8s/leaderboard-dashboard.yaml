@@ -33,7 +33,7 @@ data:
       "panels": [
         {
           "datasource": {
-            "type": "postgres",
+            "type": "grafana-postgresql-datasource",
             "uid": "postgres"
           },
           "fieldConfig": {
@@ -109,33 +109,13 @@ data:
           "targets": [
             {
               "datasource": {
-                "type": "postgres",
+                "type": "grafana-postgresql-datasource",
                 "uid": "postgres"
               },
               "format": "table",
-              "group": [],
-              "metricColumn": "none",
               "rawQuery": true,
               "rawSql": "SELECT \n  ROW_NUMBER() OVER (ORDER BY score DESC) as rank,\n  player_name,\n  score,\n  created_at\nFROM scores\nORDER BY score DESC\nLIMIT 100;",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": ["*"],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "table": "scores",
-              "timeColumn": "created_at",
-              "timeColumnType": "timestamp",
-              "where": [
-                {
-                  "name": "$__timeFilter",
-                  "params": [],
-                  "type": "macro"
-                }
-              ]
+              "refId": "A"
             }
           ],
           "title": "🏆 Top 100 Scores",
@@ -366,7 +346,7 @@ data:
         },
         {
           "datasource": {
-            "type": "postgres",
+            "type": "grafana-postgresql-datasource",
             "uid": "postgres"
           },
           "fieldConfig": {
@@ -441,7 +421,7 @@ data:
           "targets": [
             {
               "datasource": {
-                "type": "postgres",
+                "type": "grafana-postgresql-datasource",
                 "uid": "postgres"
               },
               "format": "time_series",
@@ -449,25 +429,7 @@ data:
               "metricColumn": "none",
               "rawQuery": true,
               "rawSql": "SELECT \n  date_trunc('minute', created_at) as time,\n  AVG(score) as \"Average Score\",\n  MAX(score) as \"Max Score\"\nFROM scores\nWHERE created_at >= NOW() - INTERVAL '1 hour'\nGROUP BY 1\nORDER BY 1;",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": ["score"],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "table": "scores",
-              "timeColumn": "created_at",
-              "timeColumnType": "timestamp",
-              "where": [
-                {
-                  "name": "$__timeFilter",
-                  "params": [],
-                  "type": "macro"
-                }
-              ]
+              "refId": "A"
             }
           ],
           "title": "📈 Score Trends",
@@ -796,7 +758,7 @@ data:
         },
         {
           "datasource": {
-            "type": "postgres",
+            "type": "grafana-postgresql-datasource",
             "uid": "postgres"
           },
           "fieldConfig": {
@@ -841,27 +803,15 @@ data:
           "targets": [
             {
               "datasource": {
-                "type": "postgres",
+                "type": "grafana-postgresql-datasource",
                 "uid": "postgres"
               },
               "format": "table",
               "group": [],
               "metricColumn": "none",
               "rawQuery": true,
-              "rawSql": "SELECT COUNT(*) as \"Total Scores\" FROM scores;",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": ["*"],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "table": "scores",
-              "timeColumn": "created_at",
-              "timeColumnType": "timestamp",
-              "where": []
+              "rawSql": "SELECT COUNT(*) as \"Total Scores\" FROM scores WHERE $__timeFilter(created_at);",
+              "refId": "A"
             }
           ],
           "title": "📊 Total Scores",
@@ -869,7 +819,7 @@ data:
         },
         {
           "datasource": {
-            "type": "postgres",
+            "type": "grafana-postgresql-datasource",
             "uid": "postgres"
           },
           "fieldConfig": {
@@ -914,27 +864,15 @@ data:
           "targets": [
             {
               "datasource": {
-                "type": "postgres",
+                "type": "grafana-postgresql-datasource",
                 "uid": "postgres"
               },
               "format": "table",
               "group": [],
               "metricColumn": "none",
               "rawQuery": true,
-              "rawSql": "SELECT COUNT(DISTINCT player_name) as \"Unique Players\" FROM scores;",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": ["*"],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "table": "scores",
-              "timeColumn": "created_at",
-              "timeColumnType": "timestamp",
-              "where": []
+              "rawSql": "SELECT COUNT(DISTINCT player_name) as \"Unique Players\" FROM scores WHERE $__timeFilter(created_at);",
+              "refId": "A"
             }
           ],
           "title": "👥 Unique Players",
@@ -942,7 +880,7 @@ data:
         },
         {
           "datasource": {
-            "type": "postgres",
+            "type": "grafana-postgresql-datasource",
             "uid": "postgres"
           },
           "fieldConfig": {
@@ -995,27 +933,15 @@ data:
           "targets": [
             {
               "datasource": {
-                "type": "postgres",
+                "type": "grafana-postgresql-datasource",
                 "uid": "postgres"
               },
               "format": "table",
               "group": [],
               "metricColumn": "none",
               "rawQuery": true,
-              "rawSql": "SELECT MAX(score) as \"High Score\" FROM scores;",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": ["*"],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "table": "scores",
-              "timeColumn": "created_at",
-              "timeColumnType": "timestamp",
-              "where": []
+              "rawSql": "SELECT MAX(score) as \"High Score\" FROM scores WHERE $__timeFilter(created_at);",
+              "refId": "A"
             }
           ],
           "title": "🏆 All-Time High Score",
@@ -1023,7 +949,7 @@ data:
         },
         {
           "datasource": {
-            "type": "postgres",
+            "type": "grafana-postgresql-datasource",
             "uid": "postgres"
           },
           "fieldConfig": {
@@ -1068,27 +994,15 @@ data:
           "targets": [
             {
               "datasource": {
-                "type": "postgres",
+                "type": "grafana-postgresql-datasource",
                 "uid": "postgres"
               },
               "format": "table",
               "group": [],
               "metricColumn": "none",
               "rawQuery": true,
-              "rawSql": "SELECT ROUND(AVG(score)) as \"Average Score\" FROM scores;",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": ["*"],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "table": "scores",
-              "timeColumn": "created_at",
-              "timeColumnType": "timestamp",
-              "where": []
+              "rawSql": "SELECT ROUND(AVG(score)) as \"Average Score\" FROM scores WHERE $__timeFilter(created_at);",
+              "refId": "A"
             }
           ],
           "title": "📊 Average Score",
