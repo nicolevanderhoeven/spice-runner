@@ -1,0 +1,8 @@
+# Ignore locally built binary (Docker will build its own Linux version)
+leaderboard-api
+
+# Ignore Go build cache and test files
+*.test
+*.out
+.DS_Store
+

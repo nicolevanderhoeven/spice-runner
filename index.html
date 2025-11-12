@@ -10,9 +10,101 @@
             #offline-resources{
                 display: none;
             }
+            
+            /* Player name modal styles */
+            #player-name-modal {
+                display: none;
+                position: fixed;
+                z-index: 10000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                justify-content: center;
+                align-items: center;
+            }
+            
+            #player-name-modal.active {
+                display: flex;
+            }
+            
+            .modal-content {
+                background-color: #535353;
+                padding: 30px;
+                border-radius: 10px;
+                text-align: center;
+                max-width: 400px;
+                width: 90%;
+                color: white;
+                font-family: 'Press Start 2P', 'Courier New', monospace;
+            }
+            
+            .modal-content h2 {
+                font-size: 18px;
+                margin-bottom: 20px;
+                color: #f7931e;
+            }
+            
+            .modal-content input {
+                width: 100%;
+                padding: 12px;
+                font-size: 14px;
+                border: 2px solid #f7931e;
+                border-radius: 5px;
+                background-color: #2b2b2b;
+                color: white;
+                margin-bottom: 20px;
+                box-sizing: border-box;
+                font-family: 'Courier New', monospace;
+            }
+            
+            .modal-content input:focus {
+                outline: none;
+                border-color: #ffa500;
+            }
+            
+            .modal-content button {
+                padding: 12px 30px;
+                font-size: 14px;
+                background-color: #f7931e;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-family: 'Press Start 2P', 'Courier New', monospace;
+                transition: background-color 0.3s;
+            }
+            
+            .modal-content button:hover {
+                background-color: #ffa500;
+            }
+            
+            .modal-content p {
+                font-size: 10px;
+                color: #999;
+                margin-top: 15px;
+            }
         </style>
     </head>
     <body>
+        <!-- Player Name Modal (shown after game if score > 1000) -->
+        <div id="player-name-modal">
+            <div class="modal-content">
+                <h2>🏆 SPICE RUNNER 🏆</h2>
+                <p style="margin-bottom: 15px;">Enter your name for the leaderboard:</p>
+                <input 
+                    type="text" 
+                    id="player-name-input" 
+                    placeholder="Your name (or leave blank for Anonymous)"
+                    maxlength="100"
+                    autocomplete="off"
+                />
+                <button id="start-game-btn">SUBMIT SCORE</button>
+                <p>The spice must flow!</p>
+            </div>
+        </div>
+        
         <div id="main-frame-error" class="interstitial-wrapper" jstcache="0">
         <img class="icon icon-offline" jseval="updateIconClass(this.classList, iconClass)" jstcache="1" style="visibility: hidden;">
             <div class="runner-container" style="width: 600px; height: 150px;">
@@ -57,6 +149,9 @@
         
         <!-- Game Session Metrics (for autoscaling) -->
         <script src="scripts/otel-metrics.js"></script>
+        
+        <!-- Leaderboard client -->
+        <script src="scripts/leaderboard-client.js"></script>
         
         <!-- Game scripts -->
         <script src="scripts/runner.js"></script>

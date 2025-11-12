@@ -690,6 +690,8 @@ spec:
           mountPath: /var/lib/grafana/dashboards-k8s
         - name: kepler-dashboard
           mountPath: /var/lib/grafana/dashboards-kepler
+        - name: leaderboard-dashboard
+          mountPath: /var/lib/grafana/dashboards-leaderboard
         - name: storage
           mountPath: /var/lib/grafana
         resources:
@@ -715,6 +717,9 @@ spec:
       - name: kepler-dashboard
         configMap:
           name: grafana-kepler-dashboard
+      - name: leaderboard-dashboard
+        configMap:
+          name: grafana-leaderboard-dashboard
       - name: storage
         emptyDir: {}
 ---
@@ -817,6 +822,15 @@ data:
         allowUiUpdates: true
         options:
           path: /var/lib/grafana/dashboards-kepler
+      - name: 'Leaderboard & Observability'
+        orgId: 1
+        folder: 'Leaderboard'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards-leaderboard
 ---
 # Grafana Dashboards ConfigMap with actual dashboard JSON
 apiVersion: v1

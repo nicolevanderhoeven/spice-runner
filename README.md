@@ -21,8 +21,10 @@ You can deploy this game yourself, or play it at [nvdh.dev/spice](https://nicole
 This project includes the following features:
 
 - **Interactive Game**: Dune-themed endless runner browser game
+- **Leaderboard System**: Full-stack leaderboard with Go API, PostgreSQL, Redis, and OpenTelemetry instrumentation
 - **Full Instrumentation**: [Faro](https://nicole.to/farorepo) for frontend instrumentation, [Alloy](https://nicole.to/alloyrepo) for telemetry collection
 - **Full Observability**: Metrics, logs, and traces with [Prometheus](https://nicole.to/promrepo), [Loki](https://nicole.to/lokirepo), and [Tempo](https://nicole.to/temporepo)
+- **Distributed Tracing**: OpenTelemetry instrumentation across frontend and backend services
 - **Pod Autoscaling**: Pod autoscaling based on HTTP traffic, CPU, and memory with [KEDA](https://nicole.to/kedarepo)
 - **Cluster Autoscaler**: Automatic node provisioning based on pending pods with [GKE Cluster Autoscaler](https://nicole.to/gkeautoscaler)
 - **Real-time Monitoring**: [Grafana](https://nicole.to/grafanarepo)
@@ -34,6 +36,45 @@ This project includes the following features:
 The application uses a multi-layer architecture with integrated observability and autoscaling:
 
 ![Spice Runner architecture](img/spice-runner-architecture.png)
+
+## Leaderboard System
+
+The Spice Runner includes a **production-grade leaderboard system** that demonstrates real-world OpenTelemetry instrumentation:
+
+- **Go API** with full OpenTelemetry tracing and custom metrics
+- **PostgreSQL** for persistent score storage
+- **Redis** caching layer for performance optimization
+- **Distributed tracing** showing request flow from frontend → API → database → cache
+- **Grafana dashboard** visualizing leaderboard data, traces, and performance metrics
+
+**Key observability features:**
+- Trace every score submission from browser to database
+- Track cache hit ratios and database query performance
+- Identify bottlenecks with span attributes (e.g., slow COUNT queries)
+- Correlate metrics with traces using exemplars
+- Monitor anti-cheat validation and error rates
+
+See [docs/LEADERBOARD-SYSTEM.md](docs/LEADERBOARD-SYSTEM.md) for detailed documentation.
+
+### Deploy the Leaderboard
+
+```bash
+# Quick deploy (requires GCP project ID)
+export GCP_PROJECT_ID=your-project-id
+./deploy-leaderboard.sh
+
+# Or deploy manually
+cd leaderboard-api
+docker build --platform linux/amd64 -t gcr.io/$GCP_PROJECT_ID/spice-runner-leaderboard:latest .
+docker push gcr.io/$GCP_PROJECT_ID/spice-runner-leaderboard:latest
+
+kubectl apply -f ../k8s/leaderboard-postgres.yaml
+kubectl apply -f ../k8s/leaderboard-redis.yaml
+kubectl apply -f ../k8s/leaderboard-api.yaml
+kubectl apply -f ../k8s/leaderboard-dashboard.yaml
+```
+
+The Grafana dashboard is automatically provisioned via ConfigMap and appears in the **"Leaderboard"** folder.
 
 ## Quick start
 
@@ -174,6 +215,11 @@ kubectl get nodes -w
 
 The following documentation provides detailed guides for setup, configuration, and operations.
 
+### Leaderboard system
+
+- [Leaderboard system guide](docs/LEADERBOARD-SYSTEM.md) - Complete documentation with OpenTelemetry instrumentation
+- [Leaderboard API README](leaderboard-api/README.md) - API-specific documentation
+
 ### Autoscaling
 
 - [KEDA quickstart](docs/KEDA-QUICKSTART.md) - Quick KEDA setup
@@ -201,24 +247,41 @@ The project is organized as follows:
 
 ```
 spice-runner/
-├── k8s/                           # Kubernetes manifests
-│   ├── deployment-cloud-stack.yaml    # Main deployment
-│   ├── service.yaml                   # Service definition
-│   ├── keda-scaledobject.yaml        # KEDA autoscaling
-│   ├── observability-stack.yaml      # Grafana, Prometheus, Loki, Tempo
-│   ├── kepler.yaml                   # Kepler energy monitoring
-│   └── kepler-dashboard.yaml         # Kepler Grafana dashboard
-├── scripts/                       # Automation scripts
-│   ├── install-keda.sh               # Install KEDA
-│   ├── deploy-kepler.sh              # Deploy Kepler
-│   ├── run-hpa-test.sh               # Run KEDA tests
-│   ├── hpa-load-test.js              # Load testing
-│   ├── mega-spike-test.js            # Spike testing
-│   └── ultimate-demo-test.js         # Comprehensive demo
-├── img/                           # Game graphics
-├── index.html                     # Game frontend
-├── nginx.conf                     # NGINX configuration
-└── Dockerfile                     # Container image
+├── k8s/                                # Kubernetes manifests
+│   ├── deployment-cloud-stack.yaml        # Main game deployment
+│   ├── service.yaml                       # Game service
+│   ├── keda-scaledobject.yaml            # KEDA autoscaling
+│   ├── observability-stack.yaml          # Grafana, Prometheus, Loki, Tempo
+│   ├── leaderboard-postgres.yaml         # PostgreSQL for leaderboard
+│   ├── leaderboard-redis.yaml            # Redis cache
+│   ├── leaderboard-api.yaml              # Leaderboard API service
+│   ├── leaderboard-dashboard.yaml        # Leaderboard Grafana dashboard
+│   ├── kepler.yaml                       # Kepler energy monitoring
+│   └── kepler-dashboard.yaml             # Kepler Grafana dashboard
+├── leaderboard-api/                    # Go API with OpenTelemetry
+│   ├── main.go                            # API implementation
+│   ├── Dockerfile                         # Container image
+│   └── go.mod                             # Go dependencies
+├── scripts/                            # Automation scripts
+│   ├── install-keda.sh                    # Install KEDA
+│   ├── deploy-kepler.sh                   # Deploy Kepler
+│   ├── run-hpa-test.sh                    # Run KEDA tests
+│   ├── hpa-load-test.js                   # Load testing
+│   ├── mega-spike-test.js                 # Spike testing
+│   ├── ultimate-demo-test.js              # Comprehensive demo
+│   ├── faro-init.js                       # Faro RUM initialization
+│   ├── faro-instrumentation.js            # Game instrumentation
+│   ├── leaderboard-client.js              # Leaderboard frontend
+│   └── otel-metrics.js                    # Game session metrics
+├── grafana-dashboards/                 # Grafana dashboards
+│   └── leaderboard-observability.json     # Leaderboard dashboard
+├── docs/                               # Documentation
+│   └── LEADERBOARD-SYSTEM.md              # Leaderboard guide
+├── img/                                # Game graphics
+├── index.html                          # Game frontend with leaderboard
+├── nginx.conf                          # NGINX configuration
+├── Dockerfile                          # Game container image
+└── deploy-leaderboard.sh               # Leaderboard deployment script
 
 ```
 
@@ -232,6 +295,8 @@ After you deploy the application, you can access the following services:
   - Default username: `admin`
   - Password: Set via the `grafana-admin-credentials` secret
   - **Kepler Dashboard**: Available in Grafana under "Energy" folder - "Kepler Energy & Power Consumption"
+  - **Leaderboard Dashboard**: Available in Grafana under "Leaderboard" folder - "Spice Runner - Leaderboard Observability"
+- **Leaderboard API**: `http://<YOUR_DOMAIN>/spice/leaderboard/api/health`
 - **Prometheus**: `http://prometheus.observability.svc.cluster.local:9090`
 
 ## Cost Optimization

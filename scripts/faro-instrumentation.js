@@ -145,6 +145,11 @@
         }
       });
 
+      // Trigger leaderboard flow (will prompt for name if score > threshold)
+      if (window.leaderboardClient && finalScore > 0) {
+        window.leaderboardClient.handleGameOver(finalScore, currentSessionId);
+      }
+
       // Mark session as inactive for metrics/autoscaling
       if (window.gameMetrics) {
         window.gameMetrics.setInactive();
