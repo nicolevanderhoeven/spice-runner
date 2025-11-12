@@ -1,1 +1,9 @@
 .cursor/
+
+# Go build artifacts
+leaderboard-api/leaderboard-api
+*.test
+*.out
+
+# macOS
+.DS_Store
