@@ -14,7 +14,7 @@ This document describes the leaderboard system for Spice Runner, which demonstra
 
 ## Architecture
 
-The leaderboard system consists of three main components:
+The leaderboard system consists of four main components:
 
 ```
 ┌─────────────────┐
@@ -34,15 +34,29 @@ The leaderboard system consists of three main components:
 │PostgreSQL│  │  Redis   │
 │  (scores)│  │ (cache)  │
 └──────────┘  └──────────┘
+         │
+         │ GET /api/leaderboard/top
+         ▼
+┌─────────────────┐
+│   Leaderboard   │  Public leaderboard page
+│   Page (.html)  │  Displays top 10 players
+└─────────────────┘
 ```
 
 ### Component Details
 
 #### 1. Frontend (Browser)
-- **Player Name Modal**: Captures player name post-game for scores above 1000 (defaults to "Anonymous")
-- **Score Submission**: Automatically submits score to API on game over
-- **Trace Propagation**: Propagates trace context to backend for distributed tracing
-- **localStorage**: Remembers player name for future games
+- **Game Page** (`index.html`):
+  - **Player Name Modal**: Captures player name post-game for scores above 1000 (defaults to "Anonymous")
+  - **Score Submission**: Automatically submits score to API on game over
+  - **Trace Propagation**: Propagates trace context to backend for distributed tracing
+  - **localStorage**: Remembers player name for future games
+- **Leaderboard Page** (`leaderboard.html`):
+  - **Public Leaderboard**: Displays top 10 players
+  - **Auto-refresh**: Updates every 30 seconds
+  - **Responsive Design**: Mobile and desktop friendly
+  - **Security**: HTML escaping to prevent XSS attacks
+  - **Access**: Available at `/spice/leaderboard.html`
 
 #### 2. Go API Service
 - **Framework**: Gorilla Mux with OpenTelemetry middleware
@@ -220,6 +234,17 @@ Expected response:
 ```
 
 ### Configure Ingress
+
+The leaderboard system includes two public endpoints:
+
+1. **Leaderboard Page**: `http://<YOUR_DOMAIN>/spice/leaderboard.html`
+   - Public-facing webpage showing top 10 players
+   - Served by the main spice-runner deployment (Nginx)
+   - No additional ingress configuration needed
+
+2. **Leaderboard API**: `http://<YOUR_DOMAIN>/spice/leaderboard/*`
+   - Backend API for score submission and retrieval
+   - Requires ingress path configuration
 
 To expose the API externally, update your existing ingress to include:
 

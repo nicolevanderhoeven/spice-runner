@@ -41,6 +41,7 @@ The application uses a multi-layer architecture with integrated observability an
 
 The Spice Runner includes a **production-grade leaderboard system** that demonstrates real-world OpenTelemetry instrumentation:
 
+- **Public Leaderboard Page** - View top 10 players at `/spice/leaderboard.html`
 - **Go API** with full OpenTelemetry tracing and custom metrics
 - **PostgreSQL** for persistent score storage
 - **Redis** caching layer for performance optimization
@@ -279,6 +280,7 @@ spice-runner/
 │   └── LEADERBOARD-SYSTEM.md              # Leaderboard guide
 ├── img/                                # Game graphics
 ├── index.html                          # Game frontend with leaderboard
+├── leaderboard.html                    # Public leaderboard page (top 10)
 ├── nginx.conf                          # NGINX configuration
 ├── Dockerfile                          # Game container image
 └── deploy-leaderboard.sh               # Leaderboard deployment script
@@ -290,6 +292,7 @@ spice-runner/
 After you deploy the application, you can access the following services:
 
 - **Game**: `http://<YOUR_DOMAIN>/spice/`
+- **Leaderboard**: `http://<YOUR_DOMAIN>/spice/leaderboard.html` - Public leaderboard showing top 10 players
 - **Grafana**: Access via LoadBalancer IP (requires login with credentials set during deployment)
   - Get IP: `kubectl get service grafana -n observability`
   - Default username: `admin`
