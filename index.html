@@ -113,9 +113,20 @@
             .interstitial-wrapper,
             .runner-container,
             .icon,
-            .icon-offline {
+            .icon-offline,
+            .runner-canvas {
                 margin: 0 !important;
                 padding: 0 !important;
+                display: block !important;
+                line-height: 0 !important;
+                border: 0 !important;
+            }
+            
+            /* Force hidden icon to take no space */
+            .icon-offline[style*="visibility: hidden"] {
+                display: none !important;
+                height: 0 !important;
+                width: 0 !important;
             }
         </style>
     </head>
