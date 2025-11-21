@@ -122,6 +122,14 @@
                 border: 0 !important;
             }
             
+            /* Force container to fit content height only */
+            #main-frame-error,
+            .interstitial-wrapper {
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+            }
+            
             /* Force hidden icon to take no space */
             .icon-offline[style*="visibility: hidden"] {
                 display: none !important;
