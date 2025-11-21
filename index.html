@@ -122,12 +122,13 @@
                 border: 0 !important;
             }
             
-            /* Force container to fit content height only */
+            /* Force container to fit content height only - override inline JS styles */
             #main-frame-error,
             .interstitial-wrapper {
-                height: auto !important;
-                min-height: 0 !important;
-                max-height: none !important;
+                height: 150px !important;
+                min-height: 150px !important;
+                max-height: 150px !important;
+                overflow: hidden !important;
             }
             
             /* Force hidden icon to take no space */
