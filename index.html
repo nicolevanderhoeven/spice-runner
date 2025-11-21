@@ -7,9 +7,17 @@
         <link rel="icon" type="image/png" href="img/favicon.png">
         <link rel="icon" type="image/x-icon" href="img/favicon.ico">
         <style>
-            body {
+            * {
                 margin: 0;
                 padding: 0;
+                box-sizing: border-box;
+            }
+            
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                height: 100%;
+                overflow-x: hidden;
             }
             
             #offline-resources{
@@ -94,7 +102,8 @@
             /* Logo styles */
             .game-logo {
                 display: block;
-                margin: 0 auto 5px auto;
+                margin: 0 auto 5px auto !important;
+                padding: 0 !important;
                 max-width: 400px;
                 width: 90%;
             }
@@ -102,9 +111,11 @@
             /* Remove spacing from game containers */
             #main-frame-error,
             .interstitial-wrapper,
-            .runner-container {
-                margin: 0;
-                padding: 0;
+            .runner-container,
+            .icon,
+            .icon-offline {
+                margin: 0 !important;
+                padding: 0 !important;
             }
         </style>
     </head>
