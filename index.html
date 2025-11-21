@@ -122,12 +122,18 @@
                 border: 0 !important;
             }
             
-            /* Force container to fit content height only - override inline JS styles */
+            /* Force container to fit content only - don't add extra height */
             #main-frame-error,
             .interstitial-wrapper {
-                height: 150px !important;
-                min-height: 150px !important;
-                max-height: 150px !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                position: relative !important;
+            }
+            
+            /* Force runner-container to be the only height */
+            .runner-container {
+                position: static !important;
             }
             
             /* Force hidden icon to take no space */
