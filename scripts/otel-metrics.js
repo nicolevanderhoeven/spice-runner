@@ -4,6 +4,8 @@
  * This script sends periodic heartbeat events via Faro to indicate
  * an active game session. These events are converted to Prometheus
  * metrics by Alloy for autoscaling purposes.
+ * 
+ * Events are sent to BOTH Alloy (in-cluster) and Grafana Cloud.
  */
 
 (function() {
@@ -11,11 +13,11 @@
 
   console.log('🔧 Initializing Game Session Metrics...');
 
-  // Wait for Faro to be ready
+  // Wait for Faro to be ready (dual-send helpers)
   function waitForFaro() {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        if (window.faroInstance) {
+        if (window.faroInstance && window.faroPushEventBoth) {
           clearInterval(checkInterval);
           resolve();
         }
@@ -24,7 +26,6 @@
   }
 
   waitForFaro().then(() => {
-    const faro = window.faroInstance;
     let isGameActive = false;
     let heartbeatInterval = null;
     let lastActivityTime = Date.now();
@@ -48,7 +49,7 @@
       // Check for idle timeout
       if (idleTime > IDLE_TIMEOUT_MS) {
         console.log(`⏰ Session timeout after ${Math.round(idleTime / 1000)}s of inactivity`);
-        faro.api.pushEvent('game_session_timeout', {
+        window.faroPushEventBoth('game_session_timeout', {
           sessionId: window.gameSessionId,
           timestamp: now,
           reason: 'idle',
@@ -61,7 +62,7 @@
       // Check for maximum session duration
       if (sessionDuration > MAX_SESSION_DURATION_MS) {
         console.log(`⏰ Maximum session duration reached (${Math.round(sessionDuration / 60000)} minutes)`);
-        faro.api.pushEvent('game_session_timeout', {
+        window.faroPushEventBoth('game_session_timeout', {
           sessionId: window.gameSessionId,
           timestamp: now,
           reason: 'max_duration',
@@ -71,8 +72,8 @@
         return;
       }
       
-      // Send heartbeat
-      faro.api.pushEvent('game_session_heartbeat', {
+      // Send heartbeat (to both instances)
+      window.faroPushEventBoth('game_session_heartbeat', {
         sessionId: window.gameSessionId,
         timestamp: now,
         status: 'active',
@@ -111,8 +112,8 @@
             heartbeatInterval = null;
           }
           
-          // Send final inactive event
-          faro.api.pushEvent('game_session_heartbeat', {
+          // Send final inactive event (to both instances)
+          window.faroPushEventBoth('game_session_heartbeat', {
             sessionId: window.gameSessionId,
             timestamp: Date.now(),
             status: 'inactive',
@@ -165,7 +166,7 @@
       }
     });
 
-    console.log('✅ Game Session Metrics initialized successfully');
+    console.log('✅ Game Session Metrics initialized (dual-send to Alloy + Grafana Cloud)');
     console.log('💓 Heartbeats: every 5s | Idle timeout: 5min | Max session: 30min');
   }).catch((error) => {
     console.error('❌ Failed to initialize Game Session Metrics:', error);

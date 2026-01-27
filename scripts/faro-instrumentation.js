@@ -7,18 +7,21 @@
  * - Collisions
  * - Scores
  * - Performance metrics
+ * 
+ * Events are sent to BOTH Alloy (in-cluster) and Grafana Cloud.
  */
 
 (function() {
   'use strict';
 
-  console.log('🎮 Instrumenting Spice Runner with Faro...');
+  console.log('🎮 Instrumenting Spice Runner with Faro (dual-send)...');
 
   // Wait for both Faro and the game to be ready
   function waitForDependencies() {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        if (window.faroInstance && typeof window.Runner !== 'undefined') {
+        // Wait for both Faro instances and the game
+        if (window.faroInstance && window.faroPushEventBoth && typeof window.Runner !== 'undefined') {
           clearInterval(checkInterval);
           resolve();
         }
@@ -27,7 +30,6 @@
   }
 
   waitForDependencies().then(() => {
-    const faro = window.faroInstance;
     // Use the globally-set sessionId from faro-init.js
     // This ensures consistency across all events from page load onwards
     let currentSessionId = window.gameSessionId;
@@ -40,13 +42,14 @@
       console.error('   window.gameSessionId =', window.gameSessionId);
     }
 
-    // Helper function to safely push events with sessionId validation
+    // Helper function to safely push events with sessionId validation (to BOTH instances)
     function safePushEvent(eventName, eventData) {
       if (!currentSessionId) {
         console.error(`❌ Cannot push event '${eventName}': sessionId is null!`, eventData);
         return;
       }
-      faro.api.pushEvent(eventName, eventData);
+      // Push to both Alloy and Grafana Cloud
+      window.faroPushEventBoth(eventName, eventData);
     }
 
     // Track game initialization
@@ -137,7 +140,8 @@
         timestamp: Date.now()
       });
 
-      faro.api.pushMeasurement({
+      // Push measurement to both instances
+      window.faroPushMeasurementBoth({
         type: 'game_score',
         values: {
           score: finalScore,
@@ -206,7 +210,7 @@
       }, { passive: true });
     });
 
-    console.log('✅ Spice Runner instrumented with Faro');
+    console.log('✅ Spice Runner instrumented with Faro (dual-send to Alloy + Grafana Cloud)');
     console.log('👁️ Activity tracking enabled for idle timeout');
   });
 })();

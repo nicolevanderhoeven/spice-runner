@@ -140,9 +140,9 @@
       if (result.rank) {
         console.log(`🏆 Your rank: #${result.rank}`);
         
-        // Push event to Faro for tracking
-        if (window.faroInstance) {
-          window.faroInstance.api.pushEvent('score_submitted_to_leaderboard', {
+        // Push event to Faro for tracking (to both instances)
+        if (window.faroPushEventBoth) {
+          window.faroPushEventBoth('score_submitted_to_leaderboard', {
             playerName: playerName,
             score: score,
             rank: result.rank,
@@ -155,9 +155,9 @@
     } catch (error) {
       console.error('❌ Failed to submit score:', error);
       
-      // Track error in Faro
-      if (window.faroInstance) {
-        window.faroInstance.api.pushError(error);
+      // Track error in Faro (to both instances)
+      if (window.faroPushErrorBoth) {
+        window.faroPushErrorBoth(error);
       }
       
       throw error;
