@@ -298,7 +298,7 @@
                 this.dimensions.HEIGHT, Runner.classes.PLAYER);
 
             this.canvasCtx = this.canvas.getContext('2d');
-            this.canvasCtx.fillStyle = '#f7f7f7';
+            this.canvasCtx.fillStyle = '#E6C88C'; // Sandy desert background
             this.canvasCtx.fill();
             Runner.updateCanvasScaling(this.canvas);
             // Horizon contains clouds, obstacles and the ground.
@@ -2007,4 +2007,56 @@
     };
 })();
 
-new Runner('.interstitial-wrapper');
+// Splash screen controller
+(function() {
+    'use strict';
+    
+    var splashScreen = document.getElementById('splash-screen');
+    var startBtn = document.getElementById('start-btn');
+    var runner = null;
+    var splashDismissed = false;
+    
+    function dismissSplash() {
+        if (splashDismissed) return;
+        splashDismissed = true;
+        
+        // Add hidden class for fade-out transition
+        splashScreen.classList.add('hidden');
+        
+        // Remove from DOM after transition
+        setTimeout(function() {
+            splashScreen.style.display = 'none';
+        }, 300);
+        
+        // Initialize the game if not already done
+        if (!runner) {
+            runner = new Runner('.interstitial-wrapper');
+        }
+    }
+    
+    // Start button click handler
+    if (startBtn) {
+        startBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            dismissSplash();
+        });
+    }
+    
+    // Space key or click anywhere on splash to dismiss
+    document.addEventListener('keydown', function(e) {
+        if (!splashDismissed && (e.keyCode === 32 || e.key === ' ')) {
+            e.preventDefault();
+            dismissSplash();
+        }
+    });
+    
+    // Click anywhere on splash screen to dismiss
+    if (splashScreen) {
+        splashScreen.addEventListener('click', function(e) {
+            // Only dismiss if clicking outside the button (button handles its own click)
+            if (e.target !== startBtn) {
+                dismissSplash();
+            }
+        });
+    }
+})();
