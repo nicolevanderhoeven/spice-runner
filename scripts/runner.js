@@ -251,7 +251,13 @@
          * Load and decode base 64 encoded sounds.
          */
         loadSounds: function() {
-            this.audioContext = new AudioContext();
+            try {
+                this.audioContext = new AudioContext();
+            } catch (e) {
+                console.warn('AudioContext not available (possibly iframe restriction):', e);
+                // Continue without sound - don't break the game
+                return;
+            }
             var resourceTemplate =
                 document.getElementById(this.config.RESOURCE_TEMPLATE_ID).content;
 
@@ -687,11 +693,15 @@
          * @param {SoundBuffer} soundBuffer
          */
         playSound: function(soundBuffer) {
-            if (soundBuffer) {
-                var sourceNode = this.audioContext.createBufferSource();
-                sourceNode.buffer = soundBuffer;
-                sourceNode.connect(this.audioContext.destination);
-                sourceNode.start(0);
+            if (soundBuffer && this.audioContext) {
+                try {
+                    var sourceNode = this.audioContext.createBufferSource();
+                    sourceNode.buffer = soundBuffer;
+                    sourceNode.connect(this.audioContext.destination);
+                    sourceNode.start(0);
+                } catch (e) {
+                    // Silently fail - audio is not critical
+                }
             }
         }
     };
