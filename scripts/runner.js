@@ -360,7 +360,7 @@
                 Runner.updateCanvasScaling(this.canvas);
                 this.distanceMeter.calcXPos(this.dimensions.WIDTH);
                 this.clearCanvas();
-                this.horizon.update(0, 0, true);
+                this.horizon.update(0, 0, true, this.distanceRan);
                 this.fremen.update(0);
 
                 // Outer container and distance meter.
@@ -453,10 +453,10 @@
                 }
                 // The horizon doesn't move until the intro is over.
                 if (this.playingIntro) {
-                    this.horizon.update(0, this.currentSpeed, hasObstacles);
+                    this.horizon.update(0, this.currentSpeed, hasObstacles, this.distanceRan);
                 } else {
                     deltaTime = !this.started ? 0 : deltaTime;
-                    this.horizon.update(deltaTime, this.currentSpeed, hasObstacles);
+                    this.horizon.update(deltaTime, this.currentSpeed, hasObstacles, this.distanceRan);
                 }
 
                 // Check for collisions.
@@ -1670,6 +1670,398 @@
 
     //******************************************************************************
     /**
+     * Moon background element.
+     * Arrakis has two moons - rendered with very slow parallax and fade-in effect.
+     * @param {HTMLCanvasElement} canvas Canvas element.
+     * @param {number} containerWidth
+     * @param {boolean} isFirstMoon True for the larger first moon, false for smaller second moon.
+     */
+    function Moon(canvas, containerWidth, isFirstMoon) {
+        this.canvas = canvas;
+        this.canvasCtx = this.canvas.getContext('2d');
+        this.containerWidth = containerWidth;
+        this.isFirstMoon = isFirstMoon;
+        
+        // Position moons closer together in the upper right
+        if (isFirstMoon) {
+            this.radius = Moon.config.FIRST_MOON_RADIUS;
+            this.xPos = containerWidth * 0.72;  // Right side
+            this.yPos = Moon.config.FIRST_MOON_Y;
+            this.isCrescent = false;
+        } else {
+            this.radius = Moon.config.SECOND_MOON_RADIUS;
+            this.xPos = containerWidth * 0.58;  // Closer to first moon
+            this.yPos = Moon.config.SECOND_MOON_Y;
+            this.isCrescent = true;
+        }
+        
+        this.opacity = 0;  // Start invisible, fade in over time
+        this.initialXPos = this.xPos;
+        
+        // Pre-generate random crater positions for consistent look
+        this.craters = this.generateCraters();
+    }
+
+    /**
+     * Moon config.
+     * @enum {number}
+     */
+    Moon.config = {
+        FIRST_MOON_RADIUS: 18,
+        FIRST_MOON_Y: 32,
+        SECOND_MOON_RADIUS: 11,
+        SECOND_MOON_Y: 48,
+        PARALLAX_SPEED: 0.02,
+        FADE_IN_START: 1500,
+        FADE_IN_END: 6000,
+        MAX_OPACITY: 0.95
+    };
+
+    Moon.prototype = {
+        /**
+         * Draw the moon with realistic shading, craters, and atmospheric glow.
+         */
+        draw: function() {
+            if (this.opacity <= 0) return;
+            
+            var ctx = this.canvasCtx;
+            ctx.save();
+            
+            if (this.isCrescent) {
+                this.drawCrescentMoon(ctx);
+            } else {
+                this.drawFullMoon(ctx);
+            }
+            
+            ctx.restore();
+        },
+        
+        /**
+         * Draw a realistic full moon with 3D shading and craters.
+         */
+        drawFullMoon: function(ctx) {
+            var x = this.xPos;
+            var y = this.yPos;
+            var r = this.radius;
+            
+            // Outer atmospheric glow (subtle, not sun-like)
+            ctx.globalAlpha = this.opacity * 0.15;
+            var glowGradient = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 1.4);
+            glowGradient.addColorStop(0, 'rgba(255, 220, 180, 0.4)');
+            glowGradient.addColorStop(1, 'rgba(255, 220, 180, 0)');
+            ctx.beginPath();
+            ctx.arc(x, y, r * 1.4, 0, Math.PI * 2);
+            ctx.fillStyle = glowGradient;
+            ctx.fill();
+            
+            // Main moon body with radial gradient for 3D effect
+            ctx.globalAlpha = this.opacity;
+            var bodyGradient = ctx.createRadialGradient(
+                x - r * 0.3, y - r * 0.3, 0,  // Light source offset
+                x, y, r
+            );
+            bodyGradient.addColorStop(0, 'rgb(255, 235, 190)');    // Bright highlight
+            bodyGradient.addColorStop(0.5, 'rgb(230, 195, 140)');  // Mid amber
+            bodyGradient.addColorStop(0.85, 'rgb(180, 145, 100)'); // Edge darkening
+            bodyGradient.addColorStop(1, 'rgb(150, 115, 75)');     // Limb darkening
+            
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = bodyGradient;
+            ctx.fill();
+            
+            // Dark maria (large dark patches like on real moon)
+            ctx.globalAlpha = this.opacity * 0.25;
+            ctx.fillStyle = 'rgb(120, 90, 60)';
+            ctx.beginPath();
+            ctx.ellipse(x - r * 0.2, y - r * 0.1, r * 0.35, r * 0.25, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x + r * 0.25, y + r * 0.3, r * 0.2, r * 0.15, -0.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw craters with shadow and highlight
+            ctx.globalAlpha = this.opacity;
+            for (var i = 0; i < this.craters.length; i++) {
+                var crater = this.craters[i];
+                var cx = x + crater.x * r;
+                var cy = y + crater.y * r;
+                var cr = crater.size * r;
+                
+                // Only draw if crater is within moon bounds
+                var distFromCenter = Math.sqrt(crater.x * crater.x + crater.y * crater.y);
+                if (distFromCenter + crater.size < 0.9) {
+                    // Crater shadow (dark part)
+                    ctx.globalAlpha = this.opacity * crater.depth * 0.5;
+                    ctx.fillStyle = 'rgb(100, 75, 50)';
+                    ctx.beginPath();
+                    ctx.arc(cx + cr * 0.2, cy + cr * 0.2, cr, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Crater rim highlight
+                    ctx.globalAlpha = this.opacity * crater.depth * 0.3;
+                    ctx.fillStyle = 'rgb(255, 240, 210)';
+                    ctx.beginPath();
+                    ctx.arc(cx - cr * 0.15, cy - cr * 0.15, cr * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Terminator shading (subtle shadow on right side to show it's a moon, not sun)
+            ctx.globalAlpha = this.opacity * 0.2;
+            var terminatorGradient = ctx.createLinearGradient(x - r, y, x + r, y);
+            terminatorGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            terminatorGradient.addColorStop(0.6, 'rgba(0, 0, 0, 0)');
+            terminatorGradient.addColorStop(1, 'rgba(60, 40, 20, 0.5)');
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = terminatorGradient;
+            ctx.fill();
+        },
+        
+        /**
+         * Draw a realistic crescent moon.
+         */
+        drawCrescentMoon: function(ctx) {
+            var x = this.xPos;
+            var y = this.yPos;
+            var r = this.radius;
+            
+            // Subtle outer glow
+            ctx.globalAlpha = this.opacity * 0.12;
+            var glowGradient = ctx.createRadialGradient(x - r * 0.3, y, r * 0.5, x, y, r * 1.3);
+            glowGradient.addColorStop(0, 'rgba(200, 220, 255, 0.5)');
+            glowGradient.addColorStop(1, 'rgba(200, 220, 255, 0)');
+            ctx.beginPath();
+            ctx.arc(x, y, r * 1.3, 0, Math.PI * 2);
+            ctx.fillStyle = glowGradient;
+            ctx.fill();
+            
+            // Create crescent by clipping
+            ctx.globalAlpha = this.opacity;
+            ctx.save();
+            
+            // Clip to moon circle
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.clip();
+            
+            // Draw full moon surface first
+            var bodyGradient = ctx.createRadialGradient(
+                x - r * 0.5, y - r * 0.2, 0,
+                x, y, r
+            );
+            bodyGradient.addColorStop(0, 'rgb(230, 240, 255)');    // Bright silvery
+            bodyGradient.addColorStop(0.4, 'rgb(190, 205, 230)');  // Mid blue-silver
+            bodyGradient.addColorStop(0.8, 'rgb(150, 170, 200)');  // Edge
+            bodyGradient.addColorStop(1, 'rgb(120, 140, 175)');    // Limb
+            
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = bodyGradient;
+            ctx.fill();
+            
+            // Add some crater texture on lit portion
+            ctx.globalAlpha = this.opacity * 0.3;
+            ctx.fillStyle = 'rgb(100, 120, 150)';
+            for (var i = 0; i < this.craters.length; i++) {
+                var crater = this.craters[i];
+                if (crater.x < 0.2) {  // Only on left (lit) side
+                    var cx = x + crater.x * r;
+                    var cy = y + crater.y * r;
+                    var cr = crater.size * r * 0.8;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Dark shadow circle to create crescent (overlapping from right)
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x + r * 0.55, y, r * 0.9, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+            
+            // Draw earthshine on dark side (very subtle illumination)
+            ctx.globalAlpha = this.opacity * 0.08;
+            ctx.beginPath();
+            ctx.arc(x + r * 0.3, y, r * 0.85, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgb(80, 100, 130)';
+            ctx.fill();
+        },
+        
+        /**
+         * Update moon position and opacity.
+         * @param {number} speed Current parallax speed adjustment.
+         * @param {number} distance Current game distance for fade-in calculation.
+         */
+        update: function(speed, distance) {
+            // Very slow parallax movement
+            this.xPos -= speed;
+            
+            // Wrap around when moon goes off-screen (very rare due to slow speed)
+            if (this.xPos + this.radius < 0) {
+                this.xPos = this.containerWidth + this.radius;
+            }
+            
+            // Calculate fade-in based on distance
+            if (distance < Moon.config.FADE_IN_START) {
+                this.opacity = 0;
+            } else if (distance < Moon.config.FADE_IN_END) {
+                var progress = (distance - Moon.config.FADE_IN_START) / 
+                               (Moon.config.FADE_IN_END - Moon.config.FADE_IN_START);
+                this.opacity = progress * Moon.config.MAX_OPACITY;
+            } else {
+                this.opacity = Moon.config.MAX_OPACITY;
+            }
+            
+            this.draw();
+        },
+        
+        /**
+         * Reset moon to initial state.
+         */
+        reset: function() {
+            this.xPos = this.initialXPos;
+            this.opacity = 0;
+        },
+        
+        /**
+         * Generate random crater positions for consistent look.
+         */
+        generateCraters: function() {
+            var craters = [];
+            var numCraters = this.isFirstMoon ? 8 : 4;
+            for (var i = 0; i < numCraters; i++) {
+                craters.push({
+                    x: (Math.random() - 0.5) * 1.4,  // -0.7 to 0.7 of radius
+                    y: (Math.random() - 0.5) * 1.4,
+                    size: 0.08 + Math.random() * 0.15,  // 8-23% of radius
+                    depth: 0.3 + Math.random() * 0.4    // darkness variation
+                });
+            }
+            return craters;
+        }
+    };
+
+    //******************************************************************************
+    /**
+     * Dust Cloud background item.
+     * Procedurally drawn desert dust cloud for atmosphere.
+     * @param {HTMLCanvasElement} canvas Canvas element.
+     * @param {number} containerWidth
+     */
+    function DustCloud(canvas, containerWidth) {
+        this.canvas = canvas;
+        this.canvasCtx = this.canvas.getContext('2d');
+        this.containerWidth = containerWidth;
+        this.xPos = containerWidth;
+        this.yPos = 0;
+        this.remove = false;
+        this.gap = getRandomNum(DustCloud.config.MIN_GAP, DustCloud.config.MAX_GAP);
+        // Randomize size for variety
+        this.scale = 0.6 + Math.random() * 0.8; // 0.6 to 1.4
+        this.width = Math.round(DustCloud.config.WIDTH * this.scale);
+        this.height = Math.round(DustCloud.config.HEIGHT * this.scale);
+        // Randomize opacity for depth
+        this.opacity = 0.15 + Math.random() * 0.25; // 0.15 to 0.4
+        this.init();
+    }
+
+    /**
+     * Dust Cloud config.
+     * @enum {number}
+     */
+    DustCloud.config = {
+        WIDTH: 90,
+        HEIGHT: 35,
+        MIN_GAP: 80,
+        MAX_GAP: 300,
+        MIN_SKY_LEVEL: 30,   // Higher in sky
+        MAX_SKY_LEVEL: 120   // Lower near horizon
+    };
+
+    DustCloud.prototype = {
+        /**
+         * Initialise the dust cloud. Sets random height.
+         */
+        init: function() {
+            this.yPos = getRandomNum(DustCloud.config.MIN_SKY_LEVEL,
+                DustCloud.config.MAX_SKY_LEVEL);
+            this.draw();
+        },
+
+        /**
+         * Draw the dust cloud using canvas shapes.
+         */
+        draw: function() {
+            var ctx = this.canvasCtx;
+            ctx.save();
+            ctx.globalAlpha = this.opacity;
+
+            // Desert dust colors - sandy tan/brown palette
+            var baseColor = 'rgb(194, 154, 108)'; // Sandy tan
+
+            // Draw multiple overlapping ellipses for cloud shape
+            ctx.fillStyle = baseColor;
+
+            // Main cloud body (3 overlapping ellipses)
+            this.drawEllipse(ctx, this.xPos + this.width * 0.2, this.yPos + this.height * 0.5, 
+                             this.width * 0.4, this.height * 0.4);
+            this.drawEllipse(ctx, this.xPos + this.width * 0.5, this.yPos + this.height * 0.4, 
+                             this.width * 0.45, this.height * 0.5);
+            this.drawEllipse(ctx, this.xPos + this.width * 0.75, this.yPos + this.height * 0.55, 
+                             this.width * 0.35, this.height * 0.35);
+
+            // Wispy trailing edge
+            ctx.globalAlpha = this.opacity * 0.5;
+            this.drawEllipse(ctx, this.xPos + this.width * 0.05, this.yPos + this.height * 0.6, 
+                             this.width * 0.2, this.height * 0.25);
+            this.drawEllipse(ctx, this.xPos + this.width * 0.9, this.yPos + this.height * 0.5, 
+                             this.width * 0.2, this.height * 0.3);
+
+            ctx.restore();
+        },
+
+        /**
+         * Draw an ellipse (cloud puff).
+         */
+        drawEllipse: function(ctx, x, y, radiusX, radiusY) {
+            ctx.beginPath();
+            ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
+            ctx.fill();
+        },
+
+        /**
+         * Update the dust cloud position.
+         * @param {number} speed
+         */
+        update: function(speed) {
+            if (!this.remove) {
+                this.xPos -= Math.ceil(speed);
+                this.draw();
+
+                if (!this.isVisible()) {
+                    this.remove = true;
+                }
+            }
+        },
+
+        /**
+         * Check if the dust cloud is visible on the stage.
+         * @return {boolean}
+         */
+        isVisible: function() {
+            return this.xPos + this.width > 0;
+        }
+    };
+
+    //******************************************************************************
+    /**
      * Ornithopter background item.
      * Similar to an obstacle object but without collision boxes.
      * @param {HTMLCanvasElement} canvas Canvas element.
@@ -1890,11 +2282,19 @@
         this.obstacles = [];
         this.horizonOffsets = [0, 0];
         this.ornithopterFrequency = this.config.ORNITHOPTER_FREQUENCY;
+        this.dustCloudFrequency = this.config.DUST_CLOUD_FREQUENCY;
 
-        // Cloud
+        // Moons (background, very slow parallax with fade-in)
+        this.firstMoon = new Moon(this.canvas, this.dimensions.WIDTH, true);
+        this.secondMoon = new Moon(this.canvas, this.dimensions.WIDTH, false);
+        this.moonSpeed = this.config.BG_MOON_SPEED;
+        // Ornithopters (background aircraft)
         this.clouds = [];
         this.ornithopterImg = images.ORNITHOPTER;
         this.ornithopterSpeed = this.config.BG_ORNITHOPTER_SPEED;
+        // Dust clouds (background atmosphere)
+        this.dustClouds = [];
+        this.dustCloudSpeed = this.config.BG_DUST_CLOUD_SPEED;
         // Horizon
         this.horizonImg = images.HORIZON;
         this.horizonLine = null;
@@ -1911,18 +2311,23 @@
      * @enum {number}
      */
     Horizon.config = {
+        BG_MOON_SPEED: 0.02,        // Very slow parallax for moons
         BG_ORNITHOPTER_SPEED: 0.2,
+        BG_DUST_CLOUD_SPEED: 0.15,  // Slower than ornithopters for parallax depth
         BUMPY_THRESHOLD: .3,
-        ORNITHOPTER_FREQUENCY: .5,
+        ORNITHOPTER_FREQUENCY: .2,  // Reduced from .5 - fewer ornithopters
+        DUST_CLOUD_FREQUENCY: .6,   // More frequent dust clouds
         HORIZON_HEIGHT: 16,
-        MAX_ORNITHOPTERS: 6
+        MAX_ORNITHOPTERS: 3,        // Reduced from 6
+        MAX_DUST_CLOUDS: 5
     };
     Horizon.prototype = {
         /**
-         * Initialise the horizon. Just add the line and a cloud. No obstacles.
+         * Initialise the horizon. Just add the line, a cloud, and dust. No obstacles.
          */
         init: function() {
             this.addCloud();
+            this.addDustCloud();
             this.horizonLine = new HorizonLine(this.canvas, this.horizonImg);
         },
 
@@ -1932,14 +2337,30 @@
          * @param {boolean} updateObstacles Used as an override to prevent
          *     the obstacles from being updated / added. This happens in the
          *     ease in section.
+         * @param {number} distance Current distance ran (for moon fade-in).
          */
-        update: function(deltaTime, currentSpeed, updateObstacles) {
+        update: function(deltaTime, currentSpeed, updateObstacles, distance) {
             this.runningTime += deltaTime;
             this.horizonLine.update(deltaTime, currentSpeed);
+            // Update moons first (furthest back, very slow parallax)
+            this.updateMoons(deltaTime, currentSpeed, distance || 0);
+            // Update dust clouds (behind ornithopters)
+            this.updateDustClouds(deltaTime, currentSpeed);
             this.updateClouds(deltaTime, currentSpeed);
             if (updateObstacles) {
                 this.updateObstacles(deltaTime, currentSpeed);
             }
+        },
+        /**
+         * Update the moon positions and fade-in.
+         * @param {number} deltaTime
+         * @param {number} currentSpeed
+         * @param {number} distance Current distance for fade-in calculation.
+         */
+        updateMoons: function(deltaTime, speed, distance) {
+            var moonSpeed = this.moonSpeed / 1000 * deltaTime * speed;
+            this.firstMoon.update(moonSpeed, distance);
+            this.secondMoon.update(moonSpeed, distance);
         },
         /**
          * Update the cloud positions.
@@ -1949,22 +2370,70 @@
         updateClouds: function(deltaTime, speed) {
             var cloudSpeed = this.ornithopterSpeed / 1000 * deltaTime * speed;
             var numOrnithopters = this.clouds.length;
-            if (numOrnithopters) {
-                for (var i = numOrnithopters - 1; i >= 0; i--) {
-                    this.clouds[i].update(cloudSpeed);
-                }
 
-                var lastCloud = this.clouds[numOrnithopters - 1];
-                // Check for adding a new cloud.
-                if (numOrnithopters < this.config.MAX_ORNITHOPTERS &&
-                    (this.dimensions.WIDTH - lastCloud.xPos) > lastCloud.cloudGap &&
-                    this.ornithopterFrequency > Math.random()) {
+            // Update existing ornithopters
+            for (var i = numOrnithopters - 1; i >= 0; i--) {
+                this.clouds[i].update(cloudSpeed);
+            }
+
+            // Remove expired clouds.
+            this.clouds = this.clouds.filter(function(obj) {
+                return !obj.remove;
+            });
+
+            // Update count after filtering
+            numOrnithopters = this.clouds.length;
+
+            // Check for adding a new ornithopter
+            if (numOrnithopters < this.config.MAX_ORNITHOPTERS) {
+                if (numOrnithopters === 0) {
+                    // Always spawn if no ornithopters exist
                     this.addCloud();
+                } else {
+                    var lastCloud = this.clouds[numOrnithopters - 1];
+                    // Spawn if gap is sufficient and random chance passes
+                    if ((this.dimensions.WIDTH - lastCloud.xPos) > lastCloud.ornithopterGap &&
+                        this.ornithopterFrequency > Math.random()) {
+                        this.addCloud();
+                    }
                 }
-                // Remove expired clouds.
-                this.clouds = this.clouds.filter(function(obj) {
-                    return !obj.remove;
-                });
+            }
+        },
+        /**
+         * Update the dust cloud positions.
+         * @param {number} deltaTime
+         * @param {number} currentSpeed
+         */
+        updateDustClouds: function(deltaTime, speed) {
+            var dustSpeed = this.dustCloudSpeed / 1000 * deltaTime * speed;
+            var numDustClouds = this.dustClouds.length;
+
+            // Update existing dust clouds
+            for (var i = numDustClouds - 1; i >= 0; i--) {
+                this.dustClouds[i].update(dustSpeed);
+            }
+
+            // Remove expired dust clouds
+            this.dustClouds = this.dustClouds.filter(function(obj) {
+                return !obj.remove;
+            });
+
+            // Update count after filtering
+            numDustClouds = this.dustClouds.length;
+
+            // Check for adding a new dust cloud
+            if (numDustClouds < this.config.MAX_DUST_CLOUDS) {
+                if (numDustClouds === 0) {
+                    // Always spawn if no dust clouds exist
+                    this.addDustCloud();
+                } else {
+                    var lastDust = this.dustClouds[numDustClouds - 1];
+                    // Spawn if gap is sufficient and random chance passes
+                    if ((this.dimensions.WIDTH - lastDust.xPos) > lastDust.gap &&
+                        this.dustCloudFrequency > Math.random()) {
+                        this.addDustCloud();
+                    }
+                }
             }
         },
         /**
@@ -2018,7 +2487,13 @@
          */
         reset: function() {
             this.obstacles = [];
+            this.clouds = [];
+            this.dustClouds = [];
             this.horizonLine.reset();
+            this.firstMoon.reset();
+            this.secondMoon.reset();
+            this.addCloud();
+            this.addDustCloud();
         },
         /**
          * Update the canvas width and scaling.
@@ -2036,6 +2511,13 @@
         addCloud: function() {
             this.clouds.push(new Ornithopter(this.canvas, this.ornithopterImg,
                 this.dimensions.WIDTH));
+        },
+
+        /**
+         * Add a new dust cloud to the horizon.
+         */
+        addDustCloud: function() {
+            this.dustClouds.push(new DustCloud(this.canvas, this.dimensions.WIDTH));
         }
     };
 })();
