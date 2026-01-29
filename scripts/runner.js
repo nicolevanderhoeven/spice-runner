@@ -2049,27 +2049,44 @@
     var runner = null;
     var splashDismissed = false;
     
+    console.log('🎮 Splash screen controller loaded', { splashScreen: !!splashScreen, startBtn: !!startBtn });
+    
     function dismissSplash() {
+        console.log('🎮 dismissSplash called, splashDismissed:', splashDismissed);
         if (splashDismissed) return;
         splashDismissed = true;
         
-        // Add hidden class for fade-out transition
-        splashScreen.classList.add('hidden');
-        
-        // Show the game logo above the canvas
-        var gameLogo = document.querySelector('.game-logo');
-        if (gameLogo) {
-            gameLogo.classList.add('visible');
-        }
-        
-        // Remove from DOM after transition
-        setTimeout(function() {
-            splashScreen.style.display = 'none';
-        }, 300);
-        
-        // Initialize the game if not already done
-        if (!runner) {
-            runner = new Runner('.interstitial-wrapper');
+        try {
+            // Add hidden class for fade-out transition
+            if (splashScreen) {
+                splashScreen.classList.add('hidden');
+                console.log('🎮 Added hidden class to splash screen');
+            } else {
+                console.error('🎮 Splash screen element not found!');
+            }
+            
+            // Show the game logo above the canvas
+            var gameLogo = document.querySelector('.game-logo');
+            if (gameLogo) {
+                gameLogo.classList.add('visible');
+            }
+            
+            // Remove from DOM after transition
+            setTimeout(function() {
+                if (splashScreen) {
+                    splashScreen.style.display = 'none';
+                    console.log('🎮 Splash screen hidden');
+                }
+            }, 300);
+            
+            // Initialize the game if not already done
+            if (!runner) {
+                console.log('🎮 Creating Runner...');
+                runner = new Runner('.interstitial-wrapper');
+                console.log('🎮 Runner created');
+            }
+        } catch (e) {
+            console.error('🎮 Error in dismissSplash:', e);
         }
     }
     
