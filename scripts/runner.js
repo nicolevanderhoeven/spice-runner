@@ -2092,14 +2092,20 @@
     
     // Start button click handler
     if (startBtn) {
+        console.log('🎮 Attaching click handler to startBtn');
         startBtn.addEventListener('click', function(e) {
+            console.log('🎮 Start button clicked!');
             e.preventDefault();
             dismissSplash();
         });
+    } else {
+        console.warn('🎮 startBtn not found!');
     }
     
     // Space key or click anywhere on splash to dismiss
+    console.log('🎮 Attaching keydown handler to document');
     document.addEventListener('keydown', function(e) {
+        console.log('🎮 Keydown event:', e.keyCode, e.key);
         if (!splashDismissed && (e.keyCode === 32 || e.key === ' ')) {
             e.preventDefault();
             dismissSplash();
@@ -2108,11 +2114,16 @@
     
     // Click anywhere on splash screen to dismiss
     if (splashScreen) {
+        console.log('🎮 Attaching click handler to splashScreen');
         splashScreen.addEventListener('click', function(e) {
+            console.log('🎮 Splash screen clicked!', e.target);
             // Only dismiss if clicking outside the button (button handles its own click)
             if (e.target !== startBtn) {
                 dismissSplash();
             }
         });
     }
+    
+    // Log that setup is complete
+    console.log('🎮 Splash screen setup complete. Waiting for user interaction...');
 })();
