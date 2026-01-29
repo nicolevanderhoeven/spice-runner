@@ -1740,7 +1740,8 @@
         this.canvasCtx = canvas.getContext('2d');
         this.sourceDimensions = {};
         this.dimensions = HorizonLine.dimensions;
-        this.sourceXPos = [0, this.dimensions.WIDTH];
+        // Use 3 tiles for smoother lookahead rendering
+        this.sourceXPos = [0, this.dimensions.WIDTH, 0];
         this.xPos = [];
         this.yPos = 0;
         this.bumpThreshold = 0.5;
@@ -1774,7 +1775,9 @@
                 }
                 this.dimensions[dimension] = HorizonLine.dimensions[dimension];
             }
-            this.xPos = [0, HorizonLine.dimensions.WIDTH];
+            // Initialize 3 tiles for smoother lookahead rendering
+            var width = HorizonLine.dimensions.WIDTH;
+            this.xPos = [0, width, width * 2];
             this.yPos = HorizonLine.dimensions.YPOS;
         },
 
@@ -1788,14 +1791,13 @@
          * Draw the horizon line.
          */
         draw: function() {
-            this.canvasCtx.drawImage(this.image, this.sourceXPos[0], 0,
-                this.sourceDimensions.WIDTH, this.sourceDimensions.HEIGHT,
-                this.xPos[0], this.yPos,
-                this.dimensions.WIDTH, this.dimensions.HEIGHT);
-            this.canvasCtx.drawImage(this.image, this.sourceXPos[1], 0,
-                this.sourceDimensions.WIDTH, this.sourceDimensions.HEIGHT,
-                this.xPos[1], this.yPos,
-                this.dimensions.WIDTH, this.dimensions.HEIGHT);
+            // Draw all 3 tiles
+            for (var i = 0; i < 3; i++) {
+                this.canvasCtx.drawImage(this.image, this.sourceXPos[i], 0,
+                    this.sourceDimensions.WIDTH, this.sourceDimensions.HEIGHT,
+                    this.xPos[i], this.yPos,
+                    this.dimensions.WIDTH, this.dimensions.HEIGHT);
+            }
         },
         /**
          * Update the x position of an indivdual piece of the line.
@@ -1803,15 +1805,23 @@
          * @param {number} increment
          */
         updateXPos: function(pos, increment) {
-            var line1 = pos;
-            var line2 = pos == 0 ? 1 : 0;
-
-            this.xPos[line1] -= increment;
-            this.xPos[line2] = this.xPos[line1] + this.dimensions.WIDTH;
-            if (this.xPos[line1] <= -this.dimensions.WIDTH) {
-                this.xPos[line1] += this.dimensions.WIDTH * 2;
-                this.xPos[line2] = this.xPos[line1] - this.dimensions.WIDTH;
-                this.sourceXPos[line1] = this.getRandomType();
+            var width = this.dimensions.WIDTH;
+            
+            // Move all tiles left by increment
+            for (var i = 0; i < 3; i++) {
+                this.xPos[i] -= increment;
+            }
+            
+            // Check each tile - if it's scrolled off-screen left, wrap it to the right
+            for (var i = 0; i < 3; i++) {
+                if (this.xPos[i] <= -width) {
+                    // Find the rightmost tile position
+                    var maxX = Math.max(this.xPos[0], this.xPos[1], this.xPos[2]);
+                    // Place this tile to the right of the rightmost tile
+                    this.xPos[i] = maxX + width;
+                    // Randomize terrain type for variety
+                    this.sourceXPos[i] = this.getRandomType();
+                }
             }
         },
         /**
@@ -1821,11 +1831,8 @@
          */
         update: function(deltaTime, speed) {
             var increment = Math.floor(speed * (FPS / 1000) * deltaTime);
-            if (this.xPos[0] <= 0) {
-                this.updateXPos(0, increment);
-            } else {
-                this.updateXPos(1, increment);
-            }
+            // updateXPos now handles all 3 tiles internally
+            this.updateXPos(0, increment);
             this.draw();
         },
 
@@ -1833,8 +1840,10 @@
          * Reset horizon to the starting position.
          */
         reset: function() {
+            var width = HorizonLine.dimensions.WIDTH;
             this.xPos[0] = 0;
-            this.xPos[1] = HorizonLine.dimensions.WIDTH;
+            this.xPos[1] = width;
+            this.xPos[2] = width * 2;
         }
     };
     //******************************************************************************
