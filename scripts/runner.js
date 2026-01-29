@@ -2049,63 +2049,44 @@
     var runner = null;
     var splashDismissed = false;
     
-    console.log('🎮 Splash screen controller loaded', { splashScreen: !!splashScreen, startBtn: !!startBtn });
-    
     function dismissSplash() {
-        console.log('🎮 dismissSplash called, splashDismissed:', splashDismissed);
         if (splashDismissed) return;
         splashDismissed = true;
         
-        try {
-            // Add hidden class for fade-out transition
+        // Add hidden class for fade-out transition
+        if (splashScreen) {
+            splashScreen.classList.add('hidden');
+        }
+        
+        // Show the game logo above the canvas
+        var gameLogo = document.querySelector('.game-logo');
+        if (gameLogo) {
+            gameLogo.classList.add('visible');
+        }
+        
+        // Remove from DOM after transition
+        setTimeout(function() {
             if (splashScreen) {
-                splashScreen.classList.add('hidden');
-                console.log('🎮 Added hidden class to splash screen');
-            } else {
-                console.error('🎮 Splash screen element not found!');
+                splashScreen.style.display = 'none';
             }
-            
-            // Show the game logo above the canvas
-            var gameLogo = document.querySelector('.game-logo');
-            if (gameLogo) {
-                gameLogo.classList.add('visible');
-            }
-            
-            // Remove from DOM after transition
-            setTimeout(function() {
-                if (splashScreen) {
-                    splashScreen.style.display = 'none';
-                    console.log('🎮 Splash screen hidden');
-                }
-            }, 300);
-            
-            // Initialize the game if not already done
-            if (!runner) {
-                console.log('🎮 Creating Runner...');
-                runner = new Runner('.interstitial-wrapper');
-                console.log('🎮 Runner created');
-            }
-        } catch (e) {
-            console.error('🎮 Error in dismissSplash:', e);
+        }, 300);
+        
+        // Initialize the game if not already done
+        if (!runner) {
+            runner = new Runner('.interstitial-wrapper');
         }
     }
     
     // Start button click handler
     if (startBtn) {
-        console.log('🎮 Attaching click handler to startBtn');
         startBtn.addEventListener('click', function(e) {
-            console.log('🎮 Start button clicked!');
             e.preventDefault();
             dismissSplash();
         });
-    } else {
-        console.warn('🎮 startBtn not found!');
     }
     
     // Space key or click anywhere on splash to dismiss
-    console.log('🎮 Attaching keydown handler to document');
     document.addEventListener('keydown', function(e) {
-        console.log('🎮 Keydown event:', e.keyCode, e.key);
         if (!splashDismissed && (e.keyCode === 32 || e.key === ' ')) {
             e.preventDefault();
             dismissSplash();
@@ -2114,16 +2095,11 @@
     
     // Click anywhere on splash screen to dismiss
     if (splashScreen) {
-        console.log('🎮 Attaching click handler to splashScreen');
         splashScreen.addEventListener('click', function(e) {
-            console.log('🎮 Splash screen clicked!', e.target);
             // Only dismiss if clicking outside the button (button handles its own click)
             if (e.target !== startBtn) {
                 dismissSplash();
             }
         });
     }
-    
-    // Log that setup is complete
-    console.log('🎮 Splash screen setup complete. Waiting for user interaction...');
 })();
