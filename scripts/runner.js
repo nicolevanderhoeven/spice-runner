@@ -99,7 +99,7 @@
      */
     Runner.defaultDimensions = {
         WIDTH: DEFAULT_WIDTH,
-        HEIGHT: 150
+        HEIGHT: 225
     };
 
     /**
@@ -428,6 +428,7 @@
          * Update the game frame.
          */
         update: function() {
+            try {
             this.drawPending = false;
             var now = performance.now();
             var deltaTime = now - (this.time || now);
@@ -454,6 +455,8 @@
 
                 // Check for collisions.
                 var collision = hasObstacles &&
+                    this.horizon.obstacles.length > 0 &&
+                    this.horizon.obstacles[0] &&
                     checkForCollision(this.horizon.obstacles[0], this.fremen);
                 if (!collision) {
                     this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
@@ -477,6 +480,10 @@
             if (!this.crashed) {
                 this.fremen.update(deltaTime);
                 this.raq();
+            }
+            } catch (e) {
+                console.error('GAME CRASH ERROR:', e);
+                console.error('Stack:', e.stack);
             }
         },
         /**
@@ -800,11 +807,11 @@
      */
     GameOverPanel.dimensions = {
         TEXT_X: 0,
-        TEXT_Y: 13,
-        TEXT_WIDTH: 191,
-        TEXT_HEIGHT: 11,
-        RESTART_WIDTH: 36,
-        RESTART_HEIGHT: 32
+        TEXT_Y: 19,
+        TEXT_WIDTH: 286,
+        TEXT_HEIGHT: 16,
+        RESTART_WIDTH: 54,
+        RESTART_HEIGHT: 48
     };
 
     GameOverPanel.prototype = {
@@ -1039,7 +1046,7 @@
             //   | | 1 | |   | |  2  | |   | |   3   | |
             //   |_|___|_|   |_|_____|_|   |_|_______|_|
             //
-            if (this.size > 1) {
+            if (this.size > 1 && this.collisionBoxes.length >= 3) {
                 this.collisionBoxes[1].width = this.width - this.collisionBoxes[0].width -
                     this.collisionBoxes[2].width;
                 this.collisionBoxes[2].x = this.width - this.collisionBoxes[2].width;
@@ -1124,28 +1131,24 @@
     Obstacle.types = [{
         type: 'HARKONNEN',
         className: ' harkonnen harkonnen-small ',
-        width: 34,
-        height: 35,
-        yPos: 105,
+        width: 65,
+        height: 90,
+        yPos: 138,
         multipleSpeed: 3,
-        minGap: 120,
+        minGap: 200,
         collisionBoxes: [
-            new CollisionBox(0, 7, 5, 27),
-            new CollisionBox(4, 0, 6, 34),
-            new CollisionBox(10, 4, 7, 14)
+            new CollisionBox(20, 30, 25, 50)
         ]
     }, {
         type: 'SANDWORM',
         className: ' sandworm sandworm-large ',
-        width: 25,
-        height: 50,
-        yPos: 90,
+        width: 37,
+        height: 75,
+        yPos: 140,
         multipleSpeed: 6,
-        minGap: 120,
+        minGap: 200,
         collisionBoxes: [
-            new CollisionBox(0, 12, 7, 38),
-            new CollisionBox(8, 0, 7, 49),
-            new CollisionBox(13, 10, 10, 38)
+            new CollisionBox(10, 25, 15, 40)
         ]
     }];
     //******************************************************************************
@@ -1188,15 +1191,15 @@
     Fremen.config = {
         DROP_VELOCITY: -5,
         GRAVITY: 0.6,
-        HEIGHT: 47,
+        HEIGHT: 70,
         INIITAL_JUMP_VELOCITY: -10,
         INTRO_DURATION: 1500,
-        MAX_JUMP_HEIGHT: 30,
-        MIN_JUMP_HEIGHT: 30,
+        MAX_JUMP_HEIGHT: 45,
+        MIN_JUMP_HEIGHT: 45,
         SPEED_DROP_COEFFICIENT: 3,
-        SPRITE_WIDTH: 262,
+        SPRITE_WIDTH: 393,
         START_X_POS: 50,
-        WIDTH: 44
+        WIDTH: 66
     };
 
     /**
@@ -1204,12 +1207,7 @@
      * @type {Array.<CollisionBox>}
      */
     Fremen.collisionBoxes = [
-        new CollisionBox(1, -1, 30, 26),
-        new CollisionBox(32, 0, 8, 16),
-        new CollisionBox(10, 35, 14, 8),
-        new CollisionBox(1, 24, 29, 5),
-        new CollisionBox(5, 30, 21, 4),
-        new CollisionBox(9, 34, 15, 4)
+        new CollisionBox(15, 10, 30, 45)
     ];
     /**
      * Animation states.
@@ -1233,15 +1231,15 @@
      */
     Fremen.animFrames = {
         WAITING: {
-            frames: [44, 0],
+            frames: [66, 0],
             msPerFrame: 1000 / 3
         },
         RUNNING: {
-            frames: [88, 132],
+            frames: [132, 198],
             msPerFrame: 1000 / 12
         },
         CRASHED: {
-            frames: [220],
+            frames: [330],
             msPerFrame: 1000 / 60
         },
         JUMPING: {
@@ -1458,16 +1456,16 @@
      * @enum {number}
      */
     DistanceMeter.dimensions = {
-        WIDTH: 10,
-        HEIGHT: 13,
-        DEST_WIDTH: 11
+        WIDTH: 15,
+        HEIGHT: 19,
+        DEST_WIDTH: 16
     };
     /**
      * Y positioning of the digits in the sprite sheet.
      * X position is always 0.
      * @type {array.<number>}
      */
-    DistanceMeter.yPos = [0, 13, 27, 40, 53, 67, 80, 93, 107, 120];
+    DistanceMeter.yPos = [0, 19, 40, 60, 79, 100, 120, 139, 160, 180];
 
     /**
      * Distance meter config.
@@ -1670,12 +1668,12 @@
      * @enum {number}
      */
     Ornithopter.config = {
-        HEIGHT: 13,
+        HEIGHT: 19,
         MAX_ORNITHOPTER_GAP: 400,
-        MAX_SKY_LEVEL: 30,
+        MAX_SKY_LEVEL: 45,
         MIN_ORNITHOPTER_GAP: 100,
-        MIN_SKY_LEVEL: 71,
-        WIDTH: 46
+        MIN_SKY_LEVEL: 106,
+        WIDTH: 69
     };
     Ornithopter.prototype = {
         /**
@@ -1754,9 +1752,9 @@
      * @enum {number}
      */
     HorizonLine.dimensions = {
-        WIDTH: 600,
-        HEIGHT: 12,
-        YPOS: 127
+        WIDTH: 900,
+        HEIGHT: 18,
+        YPOS: 197
     };
 
     HorizonLine.prototype = {
