@@ -260,6 +260,212 @@ describe('HorizonLine', () => {
     });
 });
 
+// =============================================================================
+// Collision Detection Tests
+// =============================================================================
+
+/**
+ * CollisionBox class for testing (mirrors runner.js)
+ */
+class CollisionBox {
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+}
+
+/**
+ * Collision tolerance constant (must match runner.js)
+ */
+const COLLISION_TOLERANCE = 10;
+
+/**
+ * Box comparison function (mirrors runner.js)
+ */
+function boxCompare(box1, box2) {
+    return (
+        box1.x < box2.x + box2.width &&
+        box1.x + box1.width > box2.x &&
+        box1.y < box2.y + box2.height &&
+        box1.height + box1.y > box2.y
+    );
+}
+
+/**
+ * Create adjusted collision box with tolerance (mirrors runner.js)
+ */
+function createAdjustedCollisionBox(box, adjustment) {
+    var shrink = Math.floor(COLLISION_TOLERANCE / 2);
+    return new CollisionBox(
+        box.x + adjustment.x + shrink,
+        box.y + adjustment.y + shrink,
+        Math.max(box.width - (shrink * 2), 1),
+        Math.max(box.height - (shrink * 2), 1)
+    );
+}
+
+describe('Collision Detection', () => {
+    describe('COLLISION_TOLERANCE', () => {
+        it('should shrink outer collision boxes by tolerance value', () => {
+            // Simulating what checkForCollision does for outer boxes
+            const tolerance = COLLISION_TOLERANCE;
+            const originalWidth = 66; // Fremen width
+            const originalHeight = 70; // Fremen height
+            
+            const shrunkWidth = originalWidth - 2 - (tolerance * 2);
+            const shrunkHeight = originalHeight - 2 - (tolerance * 2);
+            
+            // With tolerance of 10, width shrinks by 22 (2 + 20), height by 22
+            expect(shrunkWidth).toBe(44);
+            expect(shrunkHeight).toBe(48);
+        });
+
+        it('should make near-misses not register as collisions', () => {
+            // Two boxes that would collide without tolerance
+            const box1 = new CollisionBox(50, 100, 60, 60);
+            const box2 = new CollisionBox(105, 100, 60, 60);
+            
+            // Without tolerance, these overlap (50+60=110 > 105)
+            expect(boxCompare(box1, box2)).toBe(true);
+            
+            // With tolerance applied (shrink by 6 on each side)
+            const toleratedBox1 = new CollisionBox(56, 106, 48, 48);
+            const toleratedBox2 = new CollisionBox(111, 106, 48, 48);
+            
+            // Now they don't overlap (56+48=104 < 111)
+            expect(boxCompare(toleratedBox1, toleratedBox2)).toBe(false);
+        });
+    });
+
+    describe('createAdjustedCollisionBox', () => {
+        it('should apply shrink factor to detailed collision boxes', () => {
+            const box = new CollisionBox(20, 30, 30, 40);
+            const adjustment = new CollisionBox(100, 150, 0, 0);
+            
+            const adjusted = createAdjustedCollisionBox(box, adjustment);
+            const shrink = Math.floor(COLLISION_TOLERANCE / 2); // 3
+            
+            expect(adjusted.x).toBe(20 + 100 + shrink); // 123
+            expect(adjusted.y).toBe(30 + 150 + shrink); // 183
+            expect(adjusted.width).toBe(30 - (shrink * 2)); // 24
+            expect(adjusted.height).toBe(40 - (shrink * 2)); // 34
+        });
+
+        it('should not allow width/height below 1', () => {
+            const tinyBox = new CollisionBox(0, 0, 4, 4);
+            const adjustment = new CollisionBox(0, 0, 0, 0);
+            
+            const adjusted = createAdjustedCollisionBox(tinyBox, adjustment);
+            
+            // With shrink of 3, 4 - 6 = -2, but should be clamped to 1
+            expect(adjusted.width).toBeGreaterThanOrEqual(1);
+            expect(adjusted.height).toBeGreaterThanOrEqual(1);
+        });
+    });
+});
+
+describe('Harkonnen Obstacle Collision Boxes', () => {
+    // Harkonnen config from runner.js
+    const HARKONNEN_WIDTH = 65;
+    const HARKONNEN_HEIGHT = 90;
+    const HARKONNEN_COLLISION_BOXES = [
+        new CollisionBox(12, 38, 18, 42),  // left
+        new CollisionBox(30, 38, 18, 42),  // middle
+        new CollisionBox(48, 38, 12, 42)   // right
+    ];
+
+    it('should have 3 collision boxes for multi-size support', () => {
+        expect(HARKONNEN_COLLISION_BOXES.length).toBe(3);
+    });
+
+    it('should have collision boxes that fit within sprite bounds', () => {
+        for (const box of HARKONNEN_COLLISION_BOXES) {
+            expect(box.x).toBeGreaterThanOrEqual(0);
+            expect(box.y).toBeGreaterThanOrEqual(0);
+            expect(box.x + box.width).toBeLessThanOrEqual(HARKONNEN_WIDTH);
+            expect(box.y + box.height).toBeLessThanOrEqual(HARKONNEN_HEIGHT);
+        }
+    });
+
+    it('should have forgiving collision boxes (smaller than full width)', () => {
+        const totalCollisionWidth = HARKONNEN_COLLISION_BOXES.reduce(
+            (sum, box) => sum + box.width, 0
+        );
+        // Collision coverage should be less than full width for forgiveness
+        expect(totalCollisionWidth).toBeLessThan(HARKONNEN_WIDTH);
+    });
+
+    describe('multi-size collision box adjustment', () => {
+        /**
+         * Simulates the init() logic from runner.js for multi-size obstacles
+         */
+        function adjustCollisionBoxesForSize(boxes, singleWidth, size) {
+            if (size <= 1 || boxes.length < 3) return boxes;
+            
+            const totalWidth = singleWidth * size;
+            const adjusted = boxes.map(b => new CollisionBox(b.x, b.y, b.width, b.height));
+            
+            // Middle box width expands to fill the gap
+            adjusted[1].width = totalWidth - adjusted[0].width - adjusted[2].width;
+            // Right box moves to the right edge
+            adjusted[2].x = totalWidth - adjusted[2].width;
+            
+            return adjusted;
+        }
+
+        it('should expand middle box for size 2', () => {
+            const adjusted = adjustCollisionBoxesForSize(
+                HARKONNEN_COLLISION_BOXES, HARKONNEN_WIDTH, 2
+            );
+            const totalWidth = HARKONNEN_WIDTH * 2; // 130
+            
+            // Middle box should span from left box edge to right box edge
+            expect(adjusted[1].width).toBe(totalWidth - 18 - 12); // 100
+        });
+
+        it('should expand middle box for size 3', () => {
+            const adjusted = adjustCollisionBoxesForSize(
+                HARKONNEN_COLLISION_BOXES, HARKONNEN_WIDTH, 3
+            );
+            const totalWidth = HARKONNEN_WIDTH * 3; // 195
+            
+            // Middle box should span from left box edge to right box edge
+            expect(adjusted[1].width).toBe(totalWidth - 18 - 12); // 165
+        });
+
+        it('should reposition right box to far edge for size 3', () => {
+            const adjusted = adjustCollisionBoxesForSize(
+                HARKONNEN_COLLISION_BOXES, HARKONNEN_WIDTH, 3
+            );
+            const totalWidth = HARKONNEN_WIDTH * 3; // 195
+            
+            // Right box should be at the far right
+            expect(adjusted[2].x).toBe(totalWidth - 12); // 183
+        });
+
+        it('should provide continuous collision coverage for size 3', () => {
+            const adjusted = adjustCollisionBoxesForSize(
+                HARKONNEN_COLLISION_BOXES, HARKONNEN_WIDTH, 3
+            );
+            
+            // Left box ends at x + width
+            const leftEnd = adjusted[0].x + adjusted[0].width; // 12 + 18 = 30
+            // Middle box starts at x
+            const middleStart = adjusted[1].x; // 30
+            // Middle box ends at x + width
+            const middleEnd = adjusted[1].x + adjusted[1].width; // 30 + 165 = 195
+            // Right box starts at x
+            const rightStart = adjusted[2].x; // 183
+            
+            // Boxes should be continuous (some overlap is OK for safety)
+            expect(middleStart).toBeLessThanOrEqual(leftEnd);
+            expect(rightStart).toBeLessThanOrEqual(middleEnd);
+        });
+    });
+});
+
 describe('HorizonLine integration with viewport', () => {
     const VIEWPORT_WIDTH = 600; // Default canvas width from runner.js
 

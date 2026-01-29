@@ -868,6 +868,13 @@
     };
     //******************************************************************************
     /**
+     * Collision tolerance - extra pixels to shrink hitboxes for forgiving gameplay.
+     * Higher values = more forgiving (easier to clear obstacles).
+     * @const
+     */
+    var COLLISION_TOLERANCE = 10;
+
+    /**
      * Check for a collision.
      * @param {!Obstacle} obstacle
      * @param {!Fremen} fremen Fremen object.
@@ -879,17 +886,19 @@
         var obstacleBoxXPos = Runner.defaultDimensions.WIDTH + obstacle.xPos;
 
         // Adjustments are made to the bounding box as there is a 1 pixel white
-        // border around the fremen and obstacles.
+        // border around the fremen and obstacles. Additional tolerance added
+        // for more forgiving gameplay.
+        var tolerance = COLLISION_TOLERANCE;
         var fremenBox = new CollisionBox(
-            fremen.xPos + 1,
-            fremen.yPos + 1,
-            fremen.config.WIDTH - 2,
-            fremen.config.HEIGHT - 2);
+            fremen.xPos + 1 + tolerance,
+            fremen.yPos + 1 + tolerance,
+            fremen.config.WIDTH - 2 - (tolerance * 2),
+            fremen.config.HEIGHT - 2 - (tolerance * 2));
         var obstacleBox = new CollisionBox(
-            obstacle.xPos + 1,
-            obstacle.yPos + 1,
-            obstacle.typeConfig.width * obstacle.size - 2,
-            obstacle.typeConfig.height - 2);
+            obstacle.xPos + 1 + tolerance,
+            obstacle.yPos + 1 + tolerance,
+            obstacle.typeConfig.width * obstacle.size - 2 - (tolerance * 2),
+            obstacle.typeConfig.height - 2 - (tolerance * 2));
         // Debug outer box
         if (opt_canvasCtx) {
             drawCollisionBoxes(opt_canvasCtx, fremenBox, obstacleBox);
@@ -928,11 +937,13 @@
      * @return {CollisionBox} The adjusted collision box object.
      */
     function createAdjustedCollisionBox(box, adjustment) {
+        // Apply tolerance to shrink detailed collision boxes for forgiving gameplay
+        var shrink = Math.floor(COLLISION_TOLERANCE / 2);
         return new CollisionBox(
-            box.x + adjustment.x,
-            box.y + adjustment.y,
-            box.width,
-            box.height);
+            box.x + adjustment.x + shrink,
+            box.y + adjustment.y + shrink,
+            Math.max(box.width - (shrink * 2), 1),
+            Math.max(box.height - (shrink * 2), 1));
     };
     /**
      * Draw the collision boxes for debug.
@@ -1134,10 +1145,15 @@
         width: 65,
         height: 90,
         yPos: 138,
-        multipleSpeed: 3,
+        multipleSpeed: 10,  // Require higher speed before 2-3 Harkonnens appear
         minGap: 200,
+        // Three collision boxes for proper multi-size obstacle support:
+        // Box 0 (left), Box 1 (middle - expands with size), Box 2 (right - repositions)
+        // Made smaller than visual sprite for forgiving gameplay
         collisionBoxes: [
-            new CollisionBox(20, 30, 25, 50)
+            new CollisionBox(12, 38, 18, 42),  // left side
+            new CollisionBox(30, 38, 18, 42),  // middle (width adjusts for size > 1)
+            new CollisionBox(48, 38, 12, 42)   // right side (x adjusts for size > 1)
         ]
     }, {
         type: 'SANDWORM',
@@ -1189,10 +1205,10 @@
      * @enum {number}
      */
     Fremen.config = {
-        DROP_VELOCITY: -5,
+        DROP_VELOCITY: -5.5,
         GRAVITY: 0.6,
         HEIGHT: 70,
-        INIITAL_JUMP_VELOCITY: -10,
+        INIITAL_JUMP_VELOCITY: -11,
         INTRO_DURATION: 1500,
         MAX_JUMP_HEIGHT: 45,
         MIN_JUMP_HEIGHT: 45,
