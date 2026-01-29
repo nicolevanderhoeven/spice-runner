@@ -2046,6 +2046,12 @@
         // Add hidden class for fade-out transition
         splashScreen.classList.add('hidden');
         
+        // Show the game logo above the canvas
+        var gameLogo = document.querySelector('.game-logo');
+        if (gameLogo) {
+            gameLogo.classList.add('visible');
+        }
+        
         // Remove from DOM after transition
         setTimeout(function() {
             splashScreen.style.display = 'none';

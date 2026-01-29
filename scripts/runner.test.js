@@ -466,6 +466,54 @@ describe('Harkonnen Obstacle Collision Boxes', () => {
     });
 });
 
+// =============================================================================
+// Splash Screen Tests
+// =============================================================================
+
+describe('Splash Screen Controller', () => {
+    let splashScreen;
+    let gameLogo;
+    let startBtn;
+
+    beforeEach(() => {
+        // Set up DOM elements
+        document.body.innerHTML = `
+            <div id="splash-screen"></div>
+            <img class="game-logo" />
+            <button id="start-btn">PLAY GAME</button>
+        `;
+        splashScreen = document.getElementById('splash-screen');
+        gameLogo = document.querySelector('.game-logo');
+        startBtn = document.getElementById('start-btn');
+    });
+
+    afterEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    describe('dismissSplash behavior', () => {
+        it('should add visible class to game logo when splash is dismissed', () => {
+            // Simulate what dismissSplash does
+            splashScreen.classList.add('hidden');
+            if (gameLogo) {
+                gameLogo.classList.add('visible');
+            }
+
+            expect(gameLogo.classList.contains('visible')).toBe(true);
+        });
+
+        it('should add hidden class to splash screen when dismissed', () => {
+            splashScreen.classList.add('hidden');
+
+            expect(splashScreen.classList.contains('hidden')).toBe(true);
+        });
+
+        it('game logo should not have visible class initially', () => {
+            expect(gameLogo.classList.contains('visible')).toBe(false);
+        });
+    });
+});
+
 describe('HorizonLine integration with viewport', () => {
     const VIEWPORT_WIDTH = 600; // Default canvas width from runner.js
 

@@ -223,9 +223,13 @@
                 margin-top: 20px;
             }
             
-            /* Hide the inline game logo when splash is visible */
+            /* Hide the inline game logo when splash is visible, show after */
             .game-logo {
-                display: none !important;
+                display: none;
+            }
+            
+            .game-logo.visible {
+                display: block !important;
             }
             
             /* Game wrapper to position game similar to splash screen */
