@@ -94,6 +94,15 @@ spec:
           value: "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
         - name: TEMPO_ENDPOINT
           value: "tempo.observability.svc.cluster.local:4317"
+        # Grafana Cloud endpoints
+        - name: GRAFANA_CLOUD_LOKI_URL
+          value: "https://logs-prod-us-central1.grafana.net/loki/api/v1/push"
+        - name: GRAFANA_CLOUD_LOKI_USERNAME
+          value: "106314"
+        - name: GRAFANA_CLOUD_TEMPO_ENDPOINT
+          value: "https://otlp-gateway-prod-us-central-0.grafana.net/otlp"
+        - name: GRAFANA_CLOUD_TEMPO_USERNAME
+          value: "102826"
         # Pod metadata
         - name: KUBERNETES_NAMESPACE
           valueFrom:
@@ -114,6 +123,9 @@ spec:
           mountPath: /var/lib/alloy/data
         - name: nginx-logs
           mountPath: /var/log/nginx
+          readOnly: true
+        - name: grafana-cloud-credentials
+          mountPath: /etc/alloy/secrets
           readOnly: true
         resources:
           requests:
@@ -146,6 +158,10 @@ spec:
       # Alloy data storage
       - name: alloy-data
         emptyDir: {}
+      # Grafana Cloud credentials
+      - name: grafana-cloud-credentials
+        secret:
+          secretName: grafana-cloud-credentials
 ---
 # Alloy ConfigMap for in-cluster stack
 apiVersion: v1
@@ -208,7 +224,7 @@ data:
         }
       }
       
-      forward_to = [loki.write.default.receiver]
+      forward_to = [loki.write.local.receiver, loki.write.grafana_cloud.receiver]
     }
     
     // Batch processor for Faro traces
@@ -217,7 +233,7 @@ data:
       send_batch_size = 100
       
       output {
-        traces = [otelcol.exporter.otlp.tempo.input]
+        traces = [otelcol.exporter.otlp.tempo_local.input, otelcol.exporter.otlphttp.tempo_cloud.input]
       }
     }
     
@@ -285,7 +301,7 @@ data:
       
       output {
         metrics = [otelcol.exporter.prometheus.default.input]
-        traces  = [otelcol.exporter.otlp.tempo.input]
+        traces  = [otelcol.exporter.otlp.tempo_local.input, otelcol.exporter.otlphttp.tempo_cloud.input]
       }
     }
     
@@ -297,13 +313,34 @@ data:
       forward_to = [prometheus.remote_write.default.receiver]
     }
     
-    otelcol.exporter.otlp "tempo" {
+    // Local Tempo exporter (in-cluster)
+    otelcol.exporter.otlp "tempo_local" {
       client {
         endpoint = env("TEMPO_ENDPOINT")
         tls {
           insecure = true  // In-cluster, no TLS needed
         }
       }
+    }
+    
+    // Grafana Cloud Tempo exporter
+    otelcol.exporter.otlphttp "tempo_cloud" {
+      client {
+        endpoint = env("GRAFANA_CLOUD_TEMPO_ENDPOINT")
+        auth     = otelcol.auth.basic.grafana_cloud_tempo.handler
+      }
+    }
+    
+    // Read Grafana Cloud token from secret file
+    local.file "grafana_cloud_token" {
+      filename = "/etc/alloy/secrets/prometheus-token"
+      is_secret = true
+    }
+    
+    // Basic auth for Grafana Cloud Tempo
+    otelcol.auth.basic "grafana_cloud_tempo" {
+      username = env("GRAFANA_CLOUD_TEMPO_USERNAME")
+      password = local.file.grafana_cloud_token.content
     }
     
     // ============================================================================
@@ -363,7 +400,7 @@ data:
         }
       }
       
-      forward_to = [loki.write.default.receiver]
+      forward_to = [loki.write.local.receiver, loki.write.grafana_cloud.receiver]
     }
     
     // ============================================================================
@@ -405,16 +442,30 @@ data:
         }
       }
       
-      forward_to = [loki.write.default.receiver]
+      forward_to = [loki.write.local.receiver, loki.write.grafana_cloud.receiver]
     }
     
     // ============================================================================
-    // Loki Write
+    // Loki Write - Local (in-cluster)
     // ============================================================================
     
-    loki.write "default" {
+    loki.write "local" {
       endpoint {
         url = env("LOKI_URL")
+      }
+    }
+    
+    // ============================================================================
+    // Loki Write - Grafana Cloud
+    // ============================================================================
+    
+    loki.write "grafana_cloud" {
+      endpoint {
+        url = env("GRAFANA_CLOUD_LOKI_URL")
+        basic_auth {
+          username = env("GRAFANA_CLOUD_LOKI_USERNAME")
+          password_file = "/etc/alloy/secrets/prometheus-token"
+        }
       }
     }
     
