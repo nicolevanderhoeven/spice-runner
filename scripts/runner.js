@@ -75,7 +75,7 @@
      * @enum {number}
      */
     Runner.config = {
-        ACCELERATION: 0.001,
+        ACCELERATION: 0.003,
         BG_ORNITHOPTER_SPEED: 0.2,
         BOTTOM_PAD: 10,
         CLEAR_TIME: 3000,
@@ -86,12 +86,16 @@
         INITIAL_JUMP_VELOCITY: 12,
         MAX_ORNITHOPTERS: 6,
         MAX_OBSTACLE_LENGTH: 3,
-        MAX_SPEED: 12,
+        MAX_SPEED: 13,
         MIN_JUMP_HEIGHT: 35,
         MOBILE_SPEED_COEFFICIENT: 1.2,
         RESOURCE_TEMPLATE_ID: 'audio-resources',
         SPEED: 6,
-        SPEED_DROP_COEFFICIENT: 3
+        SPEED_DROP_COEFFICIENT: 3,
+        // Score-based speed scaling: speed cap increases at score milestones
+        SPEED_SCALE_INTERVAL: 1000,  // Every 1000 points
+        SPEED_SCALE_AMOUNT: 1.5,     // Add 1.5 to max speed per interval
+        ABSOLUTE_MAX_SPEED: 25       // Hard cap to prevent unplayable speeds
     };
     /**
      * Default dimensions.
@@ -466,7 +470,17 @@
                     checkForCollision(this.horizon.obstacles[0], this.fremen);
                 if (!collision) {
                     this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
-                    if (this.currentSpeed < this.config.MAX_SPEED) {
+                    
+                    // Calculate dynamic max speed based on score
+                    var currentScore = this.distanceMeter.getActualDistance(this.distanceRan);
+                    var speedBonusIntervals = Math.floor(currentScore / this.config.SPEED_SCALE_INTERVAL);
+                    var dynamicMaxSpeed = Math.min(
+                        this.config.MAX_SPEED + (speedBonusIntervals * this.config.SPEED_SCALE_AMOUNT),
+                        this.config.ABSOLUTE_MAX_SPEED
+                    );
+                    
+                    // Accelerate up to the dynamic max speed
+                    if (this.currentSpeed < dynamicMaxSpeed) {
                         this.currentSpeed += this.config.ACCELERATION;
                     }
                 } else {

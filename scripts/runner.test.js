@@ -514,6 +514,134 @@ describe('Splash Screen Controller', () => {
     });
 });
 
+// =============================================================================
+// Speed Scaling Tests
+// =============================================================================
+
+describe('Speed Scaling System', () => {
+    // Config values from runner.js
+    const SPEED_CONFIG = {
+        SPEED: 6,
+        MAX_SPEED: 13,
+        ACCELERATION: 0.003,
+        SPEED_SCALE_INTERVAL: 1000,
+        SPEED_SCALE_AMOUNT: 1.5,
+        ABSOLUTE_MAX_SPEED: 25
+    };
+
+    /**
+     * Calculate dynamic max speed based on score (mirrors runner.js logic)
+     */
+    function calculateDynamicMaxSpeed(score, config) {
+        const speedBonusIntervals = Math.floor(score / config.SPEED_SCALE_INTERVAL);
+        return Math.min(
+            config.MAX_SPEED + (speedBonusIntervals * config.SPEED_SCALE_AMOUNT),
+            config.ABSOLUTE_MAX_SPEED
+        );
+    }
+
+    describe('configuration values', () => {
+        it('should have faster acceleration than before (was 0.001)', () => {
+            expect(SPEED_CONFIG.ACCELERATION).toBeGreaterThan(0.001);
+        });
+
+        it('should have higher initial max speed than before (was 12)', () => {
+            expect(SPEED_CONFIG.MAX_SPEED).toBeGreaterThan(12);
+        });
+
+        it('should have an absolute max speed cap', () => {
+            expect(SPEED_CONFIG.ABSOLUTE_MAX_SPEED).toBeDefined();
+            expect(SPEED_CONFIG.ABSOLUTE_MAX_SPEED).toBeGreaterThan(SPEED_CONFIG.MAX_SPEED);
+        });
+    });
+
+    describe('calculateDynamicMaxSpeed', () => {
+        it('should return base MAX_SPEED at score 0', () => {
+            const maxSpeed = calculateDynamicMaxSpeed(0, SPEED_CONFIG);
+            expect(maxSpeed).toBe(SPEED_CONFIG.MAX_SPEED);
+        });
+
+        it('should return base MAX_SPEED just below first interval', () => {
+            const maxSpeed = calculateDynamicMaxSpeed(999, SPEED_CONFIG);
+            expect(maxSpeed).toBe(SPEED_CONFIG.MAX_SPEED);
+        });
+
+        it('should increase max speed at first score interval (1000)', () => {
+            const maxSpeed = calculateDynamicMaxSpeed(1000, SPEED_CONFIG);
+            expect(maxSpeed).toBe(SPEED_CONFIG.MAX_SPEED + SPEED_CONFIG.SPEED_SCALE_AMOUNT);
+        });
+
+        it('should increase max speed proportionally with score', () => {
+            const scoreAt5000 = calculateDynamicMaxSpeed(5000, SPEED_CONFIG);
+            const expectedSpeed = SPEED_CONFIG.MAX_SPEED + (5 * SPEED_CONFIG.SPEED_SCALE_AMOUNT);
+            expect(scoreAt5000).toBe(expectedSpeed);
+        });
+
+        it('should cap max speed at ABSOLUTE_MAX_SPEED', () => {
+            // Calculate how many intervals to exceed absolute max
+            const intervalsToExceed = Math.ceil(
+                (SPEED_CONFIG.ABSOLUTE_MAX_SPEED - SPEED_CONFIG.MAX_SPEED) / SPEED_CONFIG.SPEED_SCALE_AMOUNT
+            ) + 5;
+            const veryHighScore = intervalsToExceed * SPEED_CONFIG.SPEED_SCALE_INTERVAL;
+            
+            const maxSpeed = calculateDynamicMaxSpeed(veryHighScore, SPEED_CONFIG);
+            expect(maxSpeed).toBe(SPEED_CONFIG.ABSOLUTE_MAX_SPEED);
+        });
+
+        it('should never exceed ABSOLUTE_MAX_SPEED even at extreme scores', () => {
+            const extremeScore = 100000;
+            const maxSpeed = calculateDynamicMaxSpeed(extremeScore, SPEED_CONFIG);
+            expect(maxSpeed).toBeLessThanOrEqual(SPEED_CONFIG.ABSOLUTE_MAX_SPEED);
+        });
+    });
+
+    describe('speed progression milestones', () => {
+        const milestones = [0, 1000, 2000, 5000, 10000, 15000, 20000];
+
+        it('should have increasing max speed at each milestone', () => {
+            let previousMaxSpeed = 0;
+            
+            for (const score of milestones) {
+                const maxSpeed = calculateDynamicMaxSpeed(score, SPEED_CONFIG);
+                expect(maxSpeed).toBeGreaterThanOrEqual(previousMaxSpeed);
+                previousMaxSpeed = maxSpeed;
+            }
+        });
+
+        it('should reach max speed cap before 20k score', () => {
+            // At 10k score, should be close to or at max
+            const speedAt10k = calculateDynamicMaxSpeed(10000, SPEED_CONFIG);
+            // At 20k, definitely at max
+            const speedAt20k = calculateDynamicMaxSpeed(20000, SPEED_CONFIG);
+            
+            expect(speedAt20k).toBe(SPEED_CONFIG.ABSOLUTE_MAX_SPEED);
+        });
+    });
+
+    describe('gameplay feel validation', () => {
+        it('should have reasonable speed at 10k score', () => {
+            const maxSpeedAt10k = calculateDynamicMaxSpeed(10000, SPEED_CONFIG);
+            
+            // At 10k, speed should be noticeably higher than the old cap of 12
+            expect(maxSpeedAt10k).toBeGreaterThan(12);
+            
+            // But not insanely high - should be challenging but playable
+            expect(maxSpeedAt10k).toBeLessThanOrEqual(SPEED_CONFIG.ABSOLUTE_MAX_SPEED);
+        });
+
+        it('should scale appropriately for casual vs skilled players', () => {
+            // Casual player might reach 2000-3000
+            const casualMaxSpeed = calculateDynamicMaxSpeed(2500, SPEED_CONFIG);
+            
+            // Skilled player might reach 8000-12000
+            const skilledMaxSpeed = calculateDynamicMaxSpeed(10000, SPEED_CONFIG);
+            
+            // Skilled player should face significantly higher speeds
+            expect(skilledMaxSpeed - casualMaxSpeed).toBeGreaterThan(5);
+        });
+    });
+});
+
 describe('HorizonLine integration with viewport', () => {
     const VIEWPORT_WIDTH = 600; // Default canvas width from runner.js
 
