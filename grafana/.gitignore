@@ -1,0 +1,12 @@
+# Docker volumes (created by docker-compose)
+grafana-data/
+prometheus-data/
+loki-data/
+tempo-data/
+
+# Grafana data
+*.db
+*.sqlite
+
+# Local testing artifacts
+*.log

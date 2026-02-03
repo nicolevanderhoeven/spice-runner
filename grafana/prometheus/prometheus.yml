@@ -1,0 +1,23 @@
+# Prometheus Configuration for Local Testing
+# This config is minimal - just enough to receive metrics via remote_write
+# and scrape local exporters if needed.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Scrape configs can be added here if you want to scrape local services
+scrape_configs:
+  # Self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Add targets for local services if needed
+  # Example: If running the leaderboard API locally
+  # - job_name: 'leaderboard-api'
+  #   static_configs:
+  #     - targets: ['host.docker.internal:8080']
+
+# Remote write receiver is enabled via command line flag
+# This allows pushing metrics from external sources for testing

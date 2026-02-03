@@ -1,0 +1,60 @@
+# Grafana Datasource Provisioning
+# These datasources are auto-configured when Grafana starts
+
+apiVersion: 1
+
+datasources:
+  # Prometheus - for metrics
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    uid: prometheus
+    editable: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: "15s"
+
+  # Loki - for logs (including Faro events)
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    uid: loki
+    editable: true
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: "traceID=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"
+
+  # Tempo - for traces
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    uid: tempo
+    editable: true
+    jsonData:
+      httpMethod: GET
+      tracesToLogs:
+        datasourceUid: loki
+        filterByTraceID: true
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: prometheus
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      lokiSearch:
+        datasourceUid: loki
+
+# Note: When importing to Grafana Cloud, you'll need to update these
+# datasource UIDs to match your Grafana Cloud datasources.
+# Common Grafana Cloud UIDs:
+#   - grafanacloud-prom (Prometheus/Mimir)
+#   - grafanacloud-logs (Loki)
+#   - grafanacloud-traces (Tempo)
