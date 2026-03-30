@@ -19,7 +19,7 @@
           "uid": "${loki_datasource}"
         },
         "enable": true,
-        "expr": "{app=\"faro\"} |= \"high_score\"",
+        "expr": "{job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"high_score\"",
         "iconColor": "gold",
         "name": "High Scores",
         "tagKeys": "score",
@@ -127,7 +127,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "sum(count_over_time({app=\"faro\"} |= \"game_session_start\" [$__range]))",
+          "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_session_start\" [$__range]))",
           "refId": "A"
         }
       ],
@@ -174,7 +174,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "sum(count_over_time({app=\"faro\"} |= \"player_jump\" [$__range]))",
+          "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"player_jump\" [$__range]))",
           "refId": "A"
         }
       ],
@@ -221,7 +221,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "sum(count_over_time({app=\"faro\"} |= \"high_score\" [$__range]))",
+          "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"high_score\" [$__range]))",
           "refId": "A"
         }
       ],
@@ -268,7 +268,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "sum(count_over_time({app=\"faro\"} |= \"game_over\" [$__range]))",
+          "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_over\" [$__range]))",
           "refId": "A"
         }
       ],
@@ -315,7 +315,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "sum(count_over_time({app=\"faro\"} |= \"score_submitted_to_leaderboard\" [$__range]))",
+          "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"score_submitted_to_leaderboard\" [$__range]))",
           "refId": "A"
         }
       ],
@@ -362,7 +362,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "sum(count_over_time({app=\"faro\"} |= \"game_collision\" [$__range]))",
+          "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"game_collision\" [$__range]))",
           "refId": "A"
         }
       ],
@@ -423,7 +423,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "sum by (event_name) (count_over_time({app=\"faro\"} | json | event_name != \"\" [$__interval]))",
+          "expr": "sum by (event_name) (count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=~\"game_start|player_jump|game_collision|game_over|high_score\" [$__interval]))",
           "legendFormat": "{{event_name}}",
           "refId": "A"
         }
@@ -485,7 +485,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "sum(count_over_time({app=\"faro\"} |= \"player_jump\" [1m]))",
+          "expr": "sum(count_over_time({job=\"faro\"} | logfmt | kind=\"event\" | event_name=\"player_jump\" [1m]))",
           "legendFormat": "Jumps",
           "refId": "A"
         }
@@ -515,7 +515,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "{app=\"faro\"} | json | line_format \"{{.event_name}}: score={{.score}} session={{.sessionId}}\"",
+          "expr": "{job=\"faro\"} | logfmt | kind=\"event\" | event_name=~\"game_start|player_jump|game_collision|game_over|high_score\"",
           "refId": "A"
         }
       ],
@@ -582,7 +582,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
-          "expr": "sum(rate(http_server_requests_total{job=~\".*leaderboard.*\"}[5m])) by (http_route)",
+          "expr": "sum(rate(http_server_requests_total{app=\"leaderboard-api\"}[5m])) by (http_route)",
           "legendFormat": "{{http_route}}",
           "refId": "A"
         }
@@ -642,19 +642,19 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
-          "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket{job=~\".*leaderboard.*\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket{app=\"leaderboard-api\"}[5m])) by (le))",
           "legendFormat": "P50",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{job=~\".*leaderboard.*\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{app=\"leaderboard-api\"}[5m])) by (le))",
           "legendFormat": "P95",
           "refId": "B"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
-          "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{job=~\".*leaderboard.*\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{app=\"leaderboard-api\"}[5m])) by (le))",
           "legendFormat": "P99",
           "refId": "C"
         }
@@ -751,7 +751,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{job=~\".*leaderboard.*\"}[5m])) by (le)) * 1000",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{app=\"leaderboard-api\"}[5m])) by (le)) * 1000",
           "refId": "A"
         }
       ],
@@ -802,7 +802,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${prometheus_datasource}" },
-          "expr": "sum(rate(http_server_requests_total{job=~\".*leaderboard.*\", http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_requests_total{job=~\".*leaderboard.*\"}[5m])) * 100",
+          "expr": "sum(rate(http_server_requests_total{app=\"leaderboard-api\", http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_requests_total{app=\"leaderboard-api\"}[5m])) * 100",
           "refId": "A"
         }
       ],
@@ -1599,7 +1599,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "{job=\"nginx-access\"} | pattern `<ip> - - [<_>] \"<method> <path> <_>\" <status> <size> \"<_>\" \"<agent>\"`",
+          "expr": "{job=\"nginx\", log_type=\"access\"}",
           "refId": "A"
         }
       ],
@@ -1628,7 +1628,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "${loki_datasource}" },
-          "expr": "{job=\"nginx-error\"} |= \"error\"",
+          "expr": "{job=\"nginx\", log_type=\"error\"}",
           "refId": "A"
         }
       ],

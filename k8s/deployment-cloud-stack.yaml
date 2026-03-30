@@ -163,6 +163,29 @@ spec:
         secret:
           secretName: grafana-cloud-credentials
 ---
+# Service to expose Alloy's OTLP gRPC endpoint for other pods (e.g. leaderboard-api)
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloy-otlp
+  namespace: default
+  labels:
+    app: spice-runner
+    component: alloy-otlp
+spec:
+  type: ClusterIP
+  selector:
+    app: spice-runner
+  ports:
+  - name: otlp-grpc
+    port: 4317
+    targetPort: 4317
+    protocol: TCP
+  - name: otlp-http
+    port: 4318
+    targetPort: 4318
+    protocol: TCP
+---
 # Alloy ConfigMap for in-cluster stack
 apiVersion: v1
 kind: ConfigMap

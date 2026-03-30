@@ -7,7 +7,7 @@ metadata:
 data:
   DATABASE_URL: "postgres://spicerunner:spicerunner@postgres.default.svc.cluster.local:5432/leaderboard?sslmode=disable"
   REDIS_URL: "redis.default.svc.cluster.local:6379"
-  OTEL_EXPORTER_OTLP_ENDPOINT: "tempo.observability.svc.cluster.local:4317"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "alloy-otlp.default.svc.cluster.local:4317"
   PORT: "8080"
 
 ---
