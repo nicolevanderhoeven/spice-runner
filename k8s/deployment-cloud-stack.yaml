@@ -102,7 +102,7 @@ spec:
         - name: GRAFANA_CLOUD_TEMPO_ENDPOINT
           value: "https://otlp-gateway-prod-us-central-0.grafana.net/otlp"
         - name: GRAFANA_CLOUD_TEMPO_USERNAME
-          value: "102826"
+          value: "35611"
         # Pod metadata
         - name: KUBERNETES_NAMESPACE
           valueFrom:
