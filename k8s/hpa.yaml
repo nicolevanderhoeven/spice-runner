@@ -13,7 +13,8 @@
 #
 # Key differences:
 #   - HPA: minReplicas: 2 (always running, no scale-to-zero)
-#   - KEDA: minReplicaCount: 0 (scale-to-zero capability)
+#   - KEDA: minReplicaCount: 1, maxReplicaCount: 20, and scales on the
+#     nginx_http_requests_total request rate (plus CPU), not just CPU/memory
 # ============================================================================
 
 apiVersion: autoscaling/v2
