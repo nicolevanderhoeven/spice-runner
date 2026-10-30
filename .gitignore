@@ -10,6 +10,3 @@ leaderboard-api/leaderboard-api
 
 # Dependencies (restore with npm ci)
 node_modules/
-
-# Large binaries
-spice-must-flow-slides.pdf
