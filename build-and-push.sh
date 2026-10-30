@@ -41,13 +41,14 @@ fi
 
 # Inject version into script tags for cache busting
 echo -e "${GREEN}🔄 Injecting version ${VERSION} into script tags...${NC}"
-cp index.html index.html.bak
+INDEX_BACKUP=$(mktemp)
+cp index.html "$INDEX_BACKUP"
+trap 'cp "$INDEX_BACKUP" index.html; rm -f "$INDEX_BACKUP" index.html.tmp' EXIT
 sed -i.tmp "s|scripts/runner.js|scripts/runner.js?v=${VERSION}|g" index.html
 sed -i.tmp "s|scripts/faro-init.js|scripts/faro-init.js?v=${VERSION}|g" index.html
 sed -i.tmp "s|scripts/faro-instrumentation.js|scripts/faro-instrumentation.js?v=${VERSION}|g" index.html
 sed -i.tmp "s|scripts/otel-metrics.js|scripts/otel-metrics.js?v=${VERSION}|g" index.html
 sed -i.tmp "s|scripts/leaderboard-client.js|scripts/leaderboard-client.js?v=${VERSION}|g" index.html
-rm -f index.html.tmp
 
 # Build the image
 echo -e "${GREEN}🔨 Building Docker image...${NC}"
@@ -57,15 +58,10 @@ docker build \
     -t ${REGISTRY}/${IMAGE_NAME}:latest \
     .
 
-# Restore original index.html
-mv index.html.bak index.html
+# Restore original index.html (also done by the EXIT trap on failure)
+cp "$INDEX_BACKUP" index.html
 
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✅ Build successful!${NC}"
-else
-    echo -e "${YELLOW}❌ Build failed${NC}"
-    exit 1
-fi
+echo -e "${GREEN}✅ Build successful!${NC}"
 
 # Push the images
 echo ""
