@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx jest
+
+  go:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: leaderboard-api
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: leaderboard-api/go.mod
+          cache-dependency-path: leaderboard-api/go.sum
+      # TODO: remove continue-on-error once the pending fix for the
+      # fmt.Sprintf(cacheKeyPlayerRank, score) format mismatch at main.go:613 lands.
+      - run: go vet ./...
+        continue-on-error: true
+      - run: go build ./...

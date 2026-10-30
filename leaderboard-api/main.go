@@ -38,7 +38,7 @@ const (
 
 	// Cache keys
 	cacheKeyTopScores  = "leaderboard:top:100"
-	cacheKeyPlayerRank = "leaderboard:player:%s:rank"
+	cacheKeyPlayerRank = "leaderboard:player:%d:rank"
 
 	// Cache TTL
 	cacheTTL = 5 * time.Minute
