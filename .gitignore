@@ -7,3 +7,6 @@ leaderboard-api/leaderboard-api
 
 # macOS
 .DS_Store
+
+# Dependencies (restore with npm ci)
+node_modules/

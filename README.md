@@ -98,12 +98,26 @@ export REGION="us-central1"
 export ZONE="us-central1-a"
 export GCP_PROJECT_ID=$(gcloud config get-value project)
 
+# Create the observability namespace first, so secrets can be created in it
+# (k8s/observability-stack.yaml also declares it, so applying it later is safe)
+kubectl create namespace observability --dry-run=client -o yaml | kubectl apply -f -
+
 # Create Grafana admin credentials secret
 kubectl create secret generic grafana-admin-credentials \
   --from-literal=admin-user=admin \
   --from-literal=admin-password=YOUR_PASSWORD_HERE \
   -n observability \
   --dry-run=client -o yaml | kubectl apply -f -
+
+# Create the Grafana Cloud credentials secret in both namespaces.
+# The app pod (Alloy) reads it from "default"; Prometheus reads it from "observability".
+# Without it, neither will start.
+for NS in default observability; do
+  kubectl create secret generic grafana-cloud-credentials \
+    --from-literal=prometheus-token=YOUR_GRAFANA_CLOUD_TOKEN_HERE \
+    -n $NS \
+    --dry-run=client -o yaml | kubectl apply -f -
+done
 
 # Deploy the observability stack
 kubectl apply -f k8s/observability-stack.yaml
@@ -123,6 +137,19 @@ gcloud container clusters update $CLUSTER_NAME \
   --max-nodes=10 \
   --zone=$ZONE
 ```
+
+### Grafana Cloud telemetry
+
+The manifests send telemetry to Grafana Cloud as well as to the in-cluster stack. A single Kubernetes secret, `grafana-cloud-credentials`, with one key, `prometheus-token`, supplies the token for metrics, logs, and traces. Create it as shown in the quick start, in both the `default` and `observability` namespaces, using a Grafana Cloud access policy token with the `metrics:write`, `logs:write`, and `traces:write` scopes. Never commit a real token.
+
+The usernames, URLs, and endpoints are not secret and are set in the manifests. They currently point to the Grafana Play stack:
+
+- **Metrics**: Prometheus `remote_write` in `k8s/observability-stack.yaml`, with the username inline in `prometheus.yml`.
+- **Logs**: the Alloy `loki.write "grafana_cloud"` block in `k8s/deployment-cloud-stack.yaml`, using the `GRAFANA_CLOUD_LOKI_URL` and `GRAFANA_CLOUD_LOKI_USERNAME` environment variables.
+- **Traces**: the Alloy OTLP exporter in `k8s/deployment-cloud-stack.yaml`, using the `GRAFANA_CLOUD_TEMPO_ENDPOINT` and `GRAFANA_CLOUD_TEMPO_USERNAME` environment variables. The OTLP gateway expects the stack instance ID as the username.
+- **Browser (Faro)**: the Faro collector URL in `scripts/faro-init.js`.
+
+To send telemetry to a different Grafana Cloud stack, change those values and recreate the secret with a token from that stack.
 
 ## Autoscaling
 
