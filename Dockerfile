@@ -1,5 +1,5 @@
 # Use official Nginx image as base
-FROM nginx:alpine
+FROM nginx:1.29.7-alpine3.23
 
 # Copy all game files to Nginx's html directory
 COPY index.html /usr/share/nginx/html/

@@ -86,7 +86,7 @@ spec:
         fsGroup: 65534
       containers:
       - name: prometheus
-        image: prom/prometheus:latest
+        image: prom/prometheus:v3.15.1
         args:
           - '--config.file=/etc/prometheus/prometheus.yml'
           - '--storage.tsdb.path=/prometheus'
@@ -430,7 +430,7 @@ spec:
         fsGroup: 10001
       containers:
       - name: loki
-        image: grafana/loki:latest
+        image: grafana/loki:3.7.9
         args:
           - -config.file=/etc/loki/loki.yaml
         ports:
@@ -557,7 +557,7 @@ spec:
         fsGroup: 10001
       containers:
       - name: tempo
-        image: grafana/tempo:latest
+        image: grafana/tempo:3.0.5
         args:
           - -config.file=/etc/tempo/tempo.yaml
         ports:
@@ -660,7 +660,7 @@ spec:
     spec:
       containers:
       - name: grafana
-        image: grafana/grafana:latest
+        image: grafana/grafana:13.3.0
         ports:
         - containerPort: 3000
           name: http
