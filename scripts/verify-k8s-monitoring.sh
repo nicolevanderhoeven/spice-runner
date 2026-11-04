@@ -84,12 +84,6 @@ check_prometheus_targets() {
         echo -e "${YELLOW}⚠ kube-state-metrics target not found${NC}"
     fi
     
-    if echo "$targets" | grep -q "kubernetes-nodes"; then
-        echo -e "${GREEN}✓ kubernetes-nodes target found${NC}"
-    else
-        echo -e "${YELLOW}⚠ kubernetes-nodes target not found${NC}"
-    fi
-    
     if echo "$targets" | grep -q "kubernetes-pods"; then
         echo -e "${GREEN}✓ kubernetes-pods target found${NC}"
     else

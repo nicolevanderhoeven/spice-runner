@@ -17,7 +17,7 @@ Counted with read-only PromQL on 2026-11-04 (`count({job="<job>"})`, and `count 
 | `prometheus` | 1,131 | 379 | 752 |
 | `kubernetes-pods` | 1,524 | 864 | 660 |
 | `keda-metrics-apiserver` | 958 | 864 | 94 |
-| Other jobs, unchanged (`keda-operator`, `kubernetes-nodes`, `nginx`) | 98 | 0 | 98 |
+| Other jobs, unchanged at measurement time (`keda-operator`, `kubernetes-nodes`, `nginx`; see "Scrape target fixes" below) | 98 | 0 | 98 |
 | **Total** | **35,425** | **25,613** | **9,812** |
 
 That is about 72% fewer active series. `prometheus_tsdb_head_series` read about 116k during the earlier assessment and 35.6k when I measured; the head count includes series from pods and nodes that have since gone away, so it swings with scale-up and scale-down. The 35,425 above is the number of series with a recent sample.
@@ -33,7 +33,7 @@ Every metric below is still collected. These are the only metrics read by any da
 - **kube-state-metrics**: `kube_node_info`, `kube_node_status_condition`, `kube_node_status_allocatable`, `kube_pod_info`, `kube_pod_status_phase`, `kube_pod_container_resource_requests`, `kube_pod_container_resource_limits`, `kube_pod_container_status_restarts_total`, `kube_deployment_status_replicas`, `kube_deployment_created`, `kube_statefulset_created`, `kube_daemonset_created`, `kube_service_info`, `kube_persistentvolumeclaim_info`, and the `kube_horizontalpodautoscaler_*` min/max/current/desired/condition series
 - **Kepler**: `kepler_container_joules_total`, `kepler_node_platform_joules_total`
 - **App and Alloy**: `http_server_requests_total`, `http_server_request_duration_seconds_bucket`, `db_query_duration_seconds_bucket`, `redis_operation_duration_seconds_bucket`, `cache_hits_total`, `cache_misses_total`, `score_submissions_total`, `score_submission_errors_total`, `nginx_http_requests_total`, `alloy_build_info`, `alloy_component_controller_running_components`, `alloy_config_last_load_successful`
-- Referenced by a dashboard but not emitted by this cluster today (nothing to keep or drop): `node_cpu_seconds_total`, `node_memory_*` (there is no node-exporter) and `keda_scaler_metrics_value`. The `keda_*` families are not matched by any rule.
+- Referenced by a dashboard but not emitted by this cluster today (nothing to keep or drop): `node_cpu_seconds_total` and `node_memory_*` (there is no node-exporter). `keda_scaler_metrics_value` (the "KEDA Desired" series) is collected again now that the `keda-operator` job scrapes `:8080` (see "Scrape target fixes").
 
 Also kept: everything else that was not named below (for example network errors and drops, CFS throttling, OOM events, memory usage/rss/cache, filesystem usage, `kube_pod_owner`, `kube_pod_status_ready`, container ready/running/waiting/terminated, deployment replica and availability counts, node and node-capacity metrics, Kepler node-level energy, `keda_*`, `process_*` and the small `go_*` gauges).
 
@@ -123,3 +123,13 @@ count by (job) ({__name__=~".+"})
 ```
 
 To bring a family back, remove its name from the relevant `regex` in `prometheus-config` and restart Prometheus.
+
+## Scrape target fixes (2026-11-04)
+
+Ten targets had been `up == 0`; none fed a dashboard, KEDA trigger or alert. Three scrape-config mistakes:
+
+- `kubernetes-nodes` (7 targets): removed. It spoke plain HTTP to the kubelet's HTTPS port 10250 (HTTP 400), so it had never worked. Node CPU, memory and network come from `kubernetes-cadvisor`; node health from `kube_node_status_condition`.
+- `keda-operator` (1 target): now scrapes `:8080`, the real Prometheus endpoint (`:9666` is KEDA's gRPC metricsservice port and always returned EOF). A `keep` rule retains only `keda_(scaler|scaled_object|trigger|resource|build|internal_scale).*`; the rest of `:8080` is Go runtime and controller-runtime framework series, and `keda_internal_metricsservice_grpc_*` already arrive via `keda-metrics-apiserver`. This brings back `keda_scaler_metrics_value`, which the "KEDA Desired" panel reads.
+- `kube-dns` pods (2 targets, job `kubernetes-pods`): dropped by a first relabel rule on `k8s_app=kube-dns`. GKE moved kube-dns to CoreDNS (metrics on `:9153`) but the pods still advertise the legacy `:10054` port.
+
+`kubernetes-cadvisor`, `kube-state-metrics`, `kepler` and the other jobs are unchanged.

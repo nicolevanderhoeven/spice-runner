@@ -201,8 +201,15 @@ data:
           - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
       
       - job_name: 'keda-operator'
+        # :8080 is the Prometheus endpoint (:9666 is KEDA's gRPC metricsservice port).
+        # Keep only the KEDA scaler/operator families; the rest is Go runtime and controller-runtime
+        # framework series, and keda_internal_metricsservice_grpc_* already arrive via keda-metrics-apiserver.
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: 'keda_(scaler|scaled_object|trigger|resource|build|internal_scale).*'
+            action: keep
         static_configs:
-          - targets: ['keda-operator.keda.svc.cluster.local:9666']
+          - targets: ['keda-operator.keda.svc.cluster.local:8080']
       
       - job_name: 'keda-metrics-apiserver'
         # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
@@ -238,13 +245,6 @@ data:
             target_label: node
         scrape_interval: 30s
       
-      - job_name: 'kubernetes-nodes'
-        kubernetes_sd_configs:
-          - role: node
-        relabel_configs:
-          - action: labelmap
-            regex: __meta_kubernetes_node_label_(.+)
-      
       - job_name: 'kubernetes-pods'
         # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
         metric_relabel_configs:
@@ -254,6 +254,10 @@ data:
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
+          # kube-dns pods still advertise the legacy :10054 sidecar port; GKE now runs CoreDNS (:9153). Nothing uses DNS metrics.
+          - source_labels: [__meta_kubernetes_pod_label_k8s_app]
+            regex: kube-dns
+            action: drop
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
             regex: true
