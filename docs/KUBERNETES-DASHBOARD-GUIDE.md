@@ -35,7 +35,6 @@ The following components have been added to your observability stack.
 The following scrape jobs have been added to Prometheus:
 
 - `kube-state-metrics`: Scrapes cluster state metrics
-- `kubernetes-nodes`: Scrapes node-level metrics
 - `kubernetes-pods`: Scrapes pod-level metrics (for pods with Prometheus annotations)
 
 ### 3. Kubernetes Cluster dashboard
@@ -89,7 +88,6 @@ kubectl port-forward -n observability svc/prometheus 9090:9090
 # Visit http://localhost:9090/targets
 # You should see the following targets:
 # - kube-state-metrics
-# - kubernetes-nodes
 # - kubernetes-pods
 ```
 

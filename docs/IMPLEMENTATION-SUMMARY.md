@@ -32,7 +32,7 @@ Complete RBAC setup for kube-state-metrics:
 
 ### Prometheus scrape configuration
 
-Enhanced Prometheus configuration with three new scrape jobs:
+Enhanced Prometheus configuration with two new scrape jobs:
 
 #### a. **kube-state-metrics** job
 ```yaml
@@ -41,17 +41,7 @@ Enhanced Prometheus configuration with three new scrape jobs:
     - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
 ```
 
-#### b. **kubernetes-nodes** job
-```yaml
-- job_name: 'kubernetes-nodes'
-  kubernetes_sd_configs:
-    - role: node
-  relabel_configs:
-    - action: labelmap
-      regex: __meta_kubernetes_node_label_(.+)
-```
-
-#### c. **kubernetes-pods** job
+#### b. **kubernetes-pods** job
 ```yaml
 - job_name: 'kubernetes-pods'
   kubernetes_sd_configs:
