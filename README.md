@@ -144,7 +144,7 @@ The manifests send telemetry to Grafana Cloud as well as to the in-cluster stack
 
 The usernames, URLs, and endpoints are not secret and are set in the manifests. They currently point to the Grafana Play stack:
 
-- **Metrics**: Prometheus `remote_write` in `k8s/observability-stack.yaml`, with the username inline in `prometheus.yml`.
+- **Metrics**: Prometheus `remote_write` in `k8s/observability-stack.yaml`, with the username inline in `prometheus.yml`. The scrape jobs drop series that no dashboard or KEDA trigger uses before they are stored or forwarded; see [docs/METRICS-TRIM.md](docs/METRICS-TRIM.md).
 - **Logs**: the Alloy `loki.write "grafana_cloud"` block in `k8s/deployment-cloud-stack.yaml`, using the `GRAFANA_CLOUD_LOKI_URL` and `GRAFANA_CLOUD_LOKI_USERNAME` environment variables.
 - **Traces**: the Alloy OTLP exporter in `k8s/deployment-cloud-stack.yaml`, using the `GRAFANA_CLOUD_TEMPO_ENDPOINT` and `GRAFANA_CLOUD_TEMPO_USERNAME` environment variables. The OTLP gateway expects the stack instance ID as the username.
 - **Browser (Faro)**: the Faro collector URL in `scripts/faro-init.js`.
