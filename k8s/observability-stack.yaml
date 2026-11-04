@@ -161,10 +161,20 @@ data:
 
     scrape_configs:
       - job_name: 'prometheus'
+        # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: '(?:(prometheus|go)_.*_bucket)'
+            action: drop
         static_configs:
           - targets: ['localhost:9090']
       
       - job_name: 'alloy'
+        # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: '(?:(alloy|loki|prometheus|otelcol|http_client|rpc_client|rpc_server|faro_receiver|remotecfg|go)_.*_bucket)'
+            action: drop
         kubernetes_sd_configs:
           - role: pod
             namespaces:
@@ -182,6 +192,11 @@ data:
             replacement: ${1}:12345
       
       - job_name: 'kube-state-metrics'
+        # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: '(?:kube_pod_(tolerations|status_reason|status_scheduled|status_scheduled_time|status_qos_class|status_initialized_time|status_ready_time|status_container_ready_time|ips|restart_policy|service_account|start_time|created))|kube_replicaset_.*|(?:kube_pod_container_(info|state_started))|kube_pod_init_container_.*|(?:kube_(configmap|secret|endpoint)_.*)|(?:kube_(deployment_(status_condition|status_observed_generation|metadata_generation|spec_paused|spec_strategy_rollingupdate_.*)|daemonset_(metadata_generation|status_observed_generation|status_current_number_scheduled|status_number_misscheduled|status_updated_number_scheduled)|service_(created|spec_type)|namespace_created|node_created|horizontalpodautoscaler_metadata_generation))'
+            action: drop
         static_configs:
           - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
       
@@ -190,10 +205,20 @@ data:
           - targets: ['keda-operator.keda.svc.cluster.local:9666']
       
       - job_name: 'keda-metrics-apiserver'
+        # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: '(?:(apiserver_.*|workqueue_.*|field_validation_.*|authentication_.*|authorization_.*|authenticated_user_requests|rest_client_.*|cardinality_enforcement_.*|hidden_metrics_total|disabled_metrics_total|registered_metrics_total|go_godebug_.*|go_cpu_classes_.*|go_gc_heap_.*|go_gc_scan_.*|go_sched_.*|go_gc_pauses_.*))'
+            action: drop
         static_configs:
           - targets: ['keda-operator-metrics-apiserver.keda.svc.cluster.local:9022']
       
       - job_name: 'kepler'
+        # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: '(?:kepler_container_(dram|core|other|package|platform|uncore)_joules_total)|kepler_container_bpf_.*'
+            action: drop
         kubernetes_sd_configs:
           - role: pod
             namespaces:
@@ -221,6 +246,11 @@ data:
             regex: __meta_kubernetes_node_label_(.+)
       
       - job_name: 'kubernetes-pods'
+        # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: '(?:(apiserver_.*|workqueue_.*|field_validation_.*|authentication_.*|authorization_.*|authenticated_user_requests|rest_client_.*|cardinality_enforcement_.*|hidden_metrics_total|disabled_metrics_total|registered_metrics_total|go_godebug_.*|go_cpu_classes_.*|go_gc_heap_.*|go_gc_scan_.*|go_sched_.*|go_gc_pauses_.*))'
+            action: drop
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
@@ -240,6 +270,11 @@ data:
             regex: __meta_kubernetes_pod_label_(.+)
       
       - job_name: 'kubernetes-cadvisor'
+        # Trim at the source: drop series nothing uses (list and rationale: docs/METRICS-TRIM.md)
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: 'container_tasks_state|container_memory_failures_total|container_blkio_device_usage_total|(?:container_fs_(reads_total|writes_total|reads_bytes_total|writes_bytes_total|reads_merged_total|writes_merged_total|read_seconds_total|write_seconds_total|sector_reads_total|sector_writes_total|io_current|io_time_seconds_total|io_time_weighted_seconds_total|inodes_free|inodes_total|limit_bytes))|container_pressure_.*|container_cpu_load_(d_)?average_10s|(?:container_cpu_(user_seconds_total|system_seconds_total|cfs_burst_.*))|(?:container_spec_(memory_swap_limit_bytes|memory_reservation_limit_bytes|cpu_shares|cpu_period))|(?:container_(sockets|processes|threads|threads_max|file_descriptors|ulimits_soft|health_state|last_seen))|(?:container_memory_(failcnt|kernel_usage|mapped_file|max_usage_bytes|swap|total_active_file_bytes|total_inactive_file_bytes))'
+            action: drop
         scheme: https
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
